@@ -158,4 +158,4 @@ Use the controller responsibly and never rely on a browser-based stop button as 
 
 ## 12. License
 
-See the repository's `LICENSE` file for the applicable license **once a license has been selected and added**. Do not assume that the separate TrenoLEGO project's license automatically applies to TrenoLegoBLE.
+TrenoLegoBLE is free and open-source software released under the **GNU General Public License v3.0 (GPL-3.0)**. You may use, modify, and redistribute it under the terms of this license. See the LICENSE file for the full license text.
