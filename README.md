@@ -4,7 +4,7 @@
 
 TrenoLegoBLE is a lightweight, installable Progressive Web App (PWA) for controlling multiple LEGO Powered Up trains from a Windows PC or an Android phone/tablet. It communicates directly with the LEGO Powered Up Hub (88009) using Bluetooth Low Energy (BLE) and the LEGO Wireless Protocol 3.0. **No ESP32, external server, or dedicated native app is required to control the trains.**
 
-TrenoLegoBLE is a standalone project, independent of [TrenoLEGO](https://github.com/AlexPedre/TrenoLEGO).
+[Click here](https://alexpedre.github.io/TrenoLegoBLE/) to try it!
 
 ## 1. Main features
 
