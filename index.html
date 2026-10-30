@@ -1,0 +1,1013 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TrenoLegoBLE</title><meta name="theme-color" content="#2196F3"><meta name="application-name" content="TrenoLegoBLE"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png"><link rel="apple-touch-icon" href="./icons/icon-192.png"><style>
+:root{font-family:Arial,Helvetica,sans-serif;color-scheme:light}*{box-sizing:border-box}body{margin:0;background:linear-gradient(to top, rgba(255,255,255,1) 50%, rgba(148,187,233,1) 100%) fixed;color:#17233b;padding:18px;min-height:100vh}main{max-width:980px;margin:auto}h1{margin:0;font-size:1.65rem}.muted{color:#46556d}.top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px}.tabs{display:flex;gap:6px;padding:5px;background:rgba(255,255,255,.45);border-radius:12px}.tabs button{border:0;background:transparent;color:#17233b}.tabs button.active{background:#2196F3;color:white}button,input,select{font:inherit}button{border:1px solid #607a9a;background:#2196F3;color:white;border-radius:9px;padding:10px 14px;cursor:pointer}button:hover:not(:disabled){filter:brightness(1.16)}button:disabled{opacity:.45;cursor:not-allowed}.primary{background:#2196F3}.danger{background:#FF0000;border-color:#FF0000}.card{background:rgba(255,255,255,.73);border:1px solid rgba(80,110,150,.35);border-radius:15px;padding:20px;margin:14px 0}.head,.controls{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.head{margin-bottom:14px}.controls{justify-content:flex-start}.slider{width:100%;accent-color:#2196F3;margin:15px 0 20px;height:24px}.reading{font-size:1.8rem;font-weight:700;font-variant-numeric:tabular-nums}.status{font-size:.87rem;color:#135d9e}.battery{font-size:.87rem;color:#46556d}.battery.low{color:#b06b00}.warn{color:#a45000;min-height:1.4em}.trainname,select{background:#fff;color:#17233b;border:1px solid #9aa9bd;border-radius:7px;padding:9px}.trainname{max-width:260px;width:100%}.setting-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:15px;margin:15px 0}.field{display:flex;flex-direction:column;gap:6px}.check{display:flex;align-items:center;gap:8px}.train-title{font-size:1.2rem;font-weight:650}.empty{border:1px dashed #7e96b7;border-radius:12px;padding:26px;text-align:center;color:#46556d}.lights-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:4px 0 14px}.lights-row .light-slider{width:min(240px,100%);accent-color:#2196F3}.lights-row .light-value{font-variant-numeric:tabular-nums}.page[hidden],[hidden]{display:none!important}.duo-hubs{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0}.duo-hub{flex:1;min-width:140px;background:rgba(219,235,251,.7);border-radius:9px;padding:10px}.duo-setup{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.duo-setup label{flex:1;min-width:150px}.duo-setup select,.duo-setup input{width:100%}.duo-note{font-size:.85rem;color:#46556d}.check input{width:18px;height:18px;accent-color:#2196F3}small{line-height:1.6}.pill{display:inline-flex;gap:8px;align-items:center}.page-heading{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}#message:empty{display:none}.reconnect-panel{margin:12px 0 18px;padding:16px;border:1px solid #7e96b7;border-radius:13px;background:rgba(255,255,255,.86)}.reconnect-panel .controls{margin-top:12px}.reconnect-progress{font-weight:600}.reconnect-details{font-size:.9rem;color:#46556d;margin-top:6px}@media(max-width:600px){body{padding:12px}.tabs{width:100%}.tabs button{flex:1}.card{padding:15px}.controls button{flex:1}}
+.bluetooth-name-setting{border-top:1px solid rgba(80,110,150,.3);padding-top:15px;margin:15px 0;display:flex;flex-direction:column;gap:9px}.bluetooth-name-setting .bluetooth-name{max-width:270px}.bluetooth-name-setting .controls button{padding:8px 11px}
+
+/* Toast: fade-in/fade-out inspired by TrenoLEGO fade animations */
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+@keyframes fadeout{from{opacity:1}to{opacity:0}}
+/* Stack begins at the vertical midpoint; subsequent notices sit below the first. */
+.toast-stack{position:fixed;z-index:1000;top:50%;left:50%;transform:translateX(-50%);width:min(90vw,540px);display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.toast{position:relative;width:100%;background:rgba(16,47,86,.96);color:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(16,38,70,.30);padding:13px 20px;text-align:center;pointer-events:none;opacity:0;line-height:1.4;overflow-wrap:anywhere}
+.toast.visible{animation:fadein .35s ease forwards}
+.toast.leaving{animation:fadeout .65s ease forwards}
+@media (prefers-reduced-motion:reduce){.toast.visible,.toast.leaving{animation-duration:.01ms}}
+.hub-information{border-top:1px solid rgba(80,110,150,.3);margin-top:15px;padding-top:13px}
+.hub-information + .controls{border-top:1px solid rgba(80,110,150,.38);margin-top:20px;padding-top:18px}
+.hub-info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:9px;margin-top:10px}
+.hub-info-field{display:flex;flex-direction:column;gap:3px;font-size:.91rem}
+.hub-info-field strong{font-variant-numeric:tabular-nums;font-weight:600}
+.rssi{font-size:.87rem;color:#46556d;white-space:nowrap}
+.rssi.weak{color:#a45000}
+
+/* Unsupported platform: full-screen, accessible notice. */
+#ios-unsupported{position:fixed;inset:0;z-index:99999;background:linear-gradient(to top,#fff 50%,#94bbe9 100%);display:flex;align-items:center;justify-content:center;padding:20px;color:#17233b}
+#ios-unsupported[hidden]{display:none!important}
+#ios-unsupported .ios-box{max-width:510px;background:rgba(255,255,255,.93);border:1px solid #9ab6d4;border-radius:18px;box-shadow:0 12px 40px rgba(22,51,89,.2);padding:30px;text-align:center}
+#ios-unsupported h2{margin:0 0 14px;font-size:1.5rem}
+#ios-unsupported p{margin:0;line-height:1.55}
+
+/* Motor slider styling adapted from TrenoLEGO's .motor and .motorvalue.
+   px/clamp dimensions keep it touch-friendly on both Windows and Android. */
+.motor-row{display:flex;align-items:center;gap:18px;margin:20px 0 22px;min-width:0}
+.motor-row .slider{-webkit-appearance:none;appearance:none;display:block;flex:1;min-width:0;width:100%;height:clamp(15px,2.8vw,25px);border:0;border-radius:30px;background:#d3d3d3;box-shadow:2px 3px 6px #55555570;margin:0;outline:none;opacity:.85;transition:background-color .5s ease,opacity .2s ease;cursor:pointer}
+.motor-row .slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:clamp(26px,4.5vw,42px);height:clamp(26px,4.5vw,42px);border:0;border-radius:50%;background:#2196F3;cursor:pointer;box-shadow:0 2px 5px #55555540}
+.motor-row .slider::-moz-range-thumb{width:clamp(26px,4.5vw,42px);height:clamp(26px,4.5vw,42px);border:0;border-radius:50%;background:#2196F3;cursor:pointer;box-shadow:0 2px 5px #55555540}
+.motor-row .slider:hover:not(:disabled){background:#a7a7a7;opacity:1}
+.motor-row .slider:disabled{cursor:not-allowed;opacity:.45}
+.motor-row .reading{color:navy;font-size:clamp(19px,2.5vw,26px);font-weight:600;min-width:86px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.train-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:10px}
+.train-actions .reconnect{order:0;margin-right:auto}
+.train-actions .light-toggle{order:1}
+.train-actions .stop{order:2;margin-left:auto}
+@media(max-width:600px){.train-actions button{flex:0 1 auto}.motor-row{gap:10px}.motor-row .reading{min-width:70px}}
+
+/* Uniform action buttons: global actions and individual trains/Duo. */
+#page-controls .page-heading{width:100%}
+.global-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%}
+.global-actions button{box-sizing:border-box;flex:0 0 auto;width:min(200px,calc((100% - 12px)/2));white-space:nowrap;text-align:center}
+.train-actions{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:12px;width:100%}
+.train-actions .reconnect{grid-column:1;grid-row:1;justify-self:start;order:unset;margin:0;width:min(200px,100%);white-space:nowrap}
+.train-actions .stop{grid-column:3;grid-row:1;justify-self:end;order:unset;margin:0;width:min(200px,100%);white-space:nowrap}
+.train-actions .light-toggle{grid-column:2;grid-row:1;justify-self:center;order:unset;margin:0}
+@media(max-width:600px){
+  .global-actions button{font-size:clamp(12px,3.5vw,15px);padding:10px 6px;flex:0 0 auto}
+  .train-actions{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+  .train-actions .reconnect{grid-column:1;grid-row:1;width:100%;min-width:0}
+  .train-actions .stop{grid-column:2;grid-row:1;width:100%;min-width:0}
+  .train-actions .light-toggle{grid-column:1 / -1;grid-row:2;justify-self:center}
+  .train-actions button{font-size:clamp(12px,3.5vw,15px);padding:10px 8px}
+}
+.app-version{display:inline-block;font-size:.43em;font-weight:400;color:#46556d;vertical-align:baseline;margin-left:.25em;white-space:nowrap}
+/* Two independent ports; dynamic motor and light controls. */
+.port-settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:16px 0}
+.port-settings .port-box{border:1px solid rgba(80,110,150,.35);border-radius:12px;padding:14px;background:rgba(219,235,251,.36)}
+.port-box .field{margin:9px 0}.port-box .check{margin:12px 0}
+.motor-controls .motor-label{font-weight:600;margin:12px 0 0}
+.motor-controls .motor-row{margin:0 0 10px}
+.motor-controls .motor-label:not(:first-child){margin-top:16px}
+.lights-controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.port-light-brightness{display:flex;align-items:center;gap:8px;margin-top:10px}
+.port-light-brightness input{flex:1;min-width:90px;accent-color:#2196F3}
+.energy-setting{padding:15px 0;border-top:1px solid rgba(80,110,150,.35);margin-top:14px}
+.energy-fields{display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin:12px 0}
+.energy-fields .field{max-width:170px}
+.energy-minutes{width:100%;max-width:130px;background:#fff;color:#17233b;border:1px solid #9aa9bd;border-radius:7px;padding:9px}
+.energy-setting small{display:block}
+
+/* Compact motor indication and aligned light buttons. */
+.motor-row{gap:8px}
+.motor-row .reading{min-width:69px}
+@media(max-width:600px){.motor-row{gap:6px}.motor-row .reading{min-width:61px}}
+.train-actions{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
+.train-actions .reconnect{grid-column:1;grid-row:1;justify-self:start;width:min(200px,100%)}
+.train-actions .stop{grid-column:2;grid-row:1;justify-self:end;width:min(200px,100%)}
+.train-actions > .light-toggle{grid-column:2;grid-row:2;justify-self:end;width:min(200px,100%)}
+.train-actions .lights-controls{grid-column:2;grid-row:2;display:flex;flex-direction:column;align-items:stretch;gap:10px;width:min(200px,100%);margin:0;justify-self:end}
+.train-actions .lights-controls .light-toggle{width:100%;margin:0;white-space:normal}
+@media(max-width:600px){
+ .train-actions > .light-toggle{grid-column:2;grid-row:2;justify-self:end;width:100%}
+ .train-actions .lights-controls{grid-column:2;grid-row:2;width:100%}
+}
+/* One light: right, directly below STOP. Two lights: left and right. */
+.train-actions .lights-controls.two-lights{
+  grid-column:1 / -1;
+  grid-row:2;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:12px;
+  width:100%;
+  justify-self:stretch;
+}
+.train-actions .lights-controls.two-lights .light-toggle{
+  width:min(200px,100%);
+  white-space:nowrap;
+}
+.train-actions .lights-controls.two-lights .light-toggle:first-child{justify-self:start}
+.train-actions .lights-controls.two-lights .light-toggle:last-child{justify-self:end}
+@media(max-width:600px){
+  .train-actions .lights-controls.two-lights{gap:10px}
+  .train-actions .lights-controls.two-lights .light-toggle{width:100%;font-size:clamp(12px,3.5vw,15px);padding:10px 6px}
+}
+
+.connection-dot{display:inline-block;width:1.05em;height:1.05em;min-width:1.05em;border-radius:50%;vertical-align:middle;border:1px solid rgba(0,0,0,.12)}
+.connection-dot.is-connected{background:#22a447}
+.connection-dot.is-disconnected{background:#e33434}
+#page-controls .status{display:inline-flex;align-items:center;justify-content:center;min-height:1.15em}
+
+/* v1.1.4: connection status precedes the train name; telemetry is compact. */
+#page-controls .connected-title,
+#page-controls .duo-member-title{display:flex;align-items:center;gap:9px;min-width:0}
+#page-controls .connected-title .train-title,
+#page-controls .duo-member-title strong{overflow-wrap:anywhere}
+#page-controls .connected-title .status,
+#page-controls .duo-member-title .status{flex:0 0 auto;line-height:1}
+#page-controls .telemetry-line{display:flex;align-items:center;gap:15px;flex-wrap:wrap}
+#page-controls .duo-member-telemetry{display:flex;align-items:center;gap:13px;flex-wrap:wrap;margin-top:9px}
+#page-controls .duo-member-telemetry .battery,
+#page-controls .duo-member-telemetry .rssi{white-space:nowrap}
+#page-controls .duo-hub{min-width:0;flex:1 1 190px}
+@media(max-width:600px){#page-controls .telemetry-line{gap:9px}}
+
+/* v1.1.4: compact Duo members and aggregated telemetry in header. */
+#page-controls .duo-summary{display:flex;align-items:center;gap:14px;flex-wrap:nowrap;white-space:nowrap}
+#page-controls .duo-hubs{display:flex;flex-direction:column;gap:7px;margin:8px 0 12px}
+#page-controls .duo-hub{display:flex;align-items:center;justify-content:space-between;gap:12px;flex:1 1 auto;width:100%;min-width:0;padding:9px 12px;flex-wrap:wrap}
+#page-controls .duo-member-title{flex:1 1 auto}
+#page-controls .duo-member-telemetry{display:flex;align-items:center;gap:14px;margin-top:0;flex:0 0 auto;flex-wrap:nowrap;white-space:nowrap}
+@media(max-width:520px){#page-controls .duo-summary{gap:8px;font-size:.84rem}#page-controls .duo-hub{gap:7px}#page-controls .duo-member-telemetry{gap:9px;font-size:.8rem}}
+
+/* v1.1.5: uniform navy train names and energy saving heading. */
+.train-title,
+#page-controls .duo-member-title strong,
+#page-settings .global-energy > strong[data-i18n="energySaving"] {
+  color: navy;
+}
+#page-settings .global-energy > strong[data-i18n="energySaving"] {
+  font-size: 1.2rem;
+  font-weight: 650;
+}
+
+/* v1.1.6 - accessible pointer/keyboard reorder handles (controls page only) */
+#trains .card .reorder-handle{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;padding:0;border:1px solid rgba(25,58,109,.24);border-radius:8px;background:rgba(255,255,255,.52);color:#000080;font-size:22px;line-height:1;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+#trains .card .reorder-handle:active{cursor:grabbing}
+#trains .card .reorder-handle:focus-visible{outline:3px solid #2196F3;outline-offset:2px}
+#trains .card .head{column-gap:9px}
+#trains .card.drag-reordering{opacity:.67;outline:2px dashed #2196F3;outline-offset:2px}
+#trains .card.drag-drop-before{box-shadow:0 -4px 0 #2196F3}
+#trains .card.drag-drop-after{box-shadow:0 4px 0 #2196F3}
+
+/* v1.1.7: reorder grip after telemetry, at the far right of each header. */
+#page-controls #trains .card > .head > .reorder-handle{order:3;margin-left:0;flex-shrink:0}
+#page-controls #trains .card > .head > .connected-title{order:1;margin-right:auto}
+#page-controls #trains .card > .head > .telemetry-line,
+#page-controls #trains .card > .head > .duo-summary{order:2;margin-left:0}
+
+/* v1.1.8: shadows consistent with the power slider (2px 3px 6px #55555570).
+   The two navigation buttons remain flat; their common container is raised. */
+:root{--tl-shadow:2px 3px 6px #55555570}
+button:not(#tab-controls):not(#tab-settings){box-shadow:var(--tl-shadow)}
+button:not(#tab-controls):not(#tab-settings):disabled{box-shadow:none}
+.tabs{box-shadow:var(--tl-shadow)}
+.tabs button{box-shadow:none}
+/* Covers Controls train/Duo cards, Settings hub/Duo cards and global energy card. */
+#page-controls .card,#page-settings .card{box-shadow:var(--tl-shadow)}
+/* Preserve clear drop-position feedback without losing the card elevation. */
+#trains .card.drag-drop-before{box-shadow:0 -4px 0 #2196F3,var(--tl-shadow)}
+#trains .card.drag-drop-after{box-shadow:0 4px 0 #2196F3,var(--tl-shadow)}
+
+/* v1.1.12: hub LED color selection */
+.hub-led-setting{border-top:1px solid rgba(80,110,150,.35);margin-top:16px;padding-top:15px;display:flex;flex-direction:column;gap:12px}
+.hub-led-setting>strong{color:#000080;font-size:1.05rem}
+.hub-led-color{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.hub-led-color select{min-width:180px;max-width:260px}.hub-led-preview{width:26px;height:26px;flex-shrink:0;border:1px solid #8792a2;border-radius:50%}
+.hub-led-setting small{max-width:650px}
+/* v1.1.9: spacing between Duo controls and hub combination */
+#duo-settings .duo-note { margin-top: 12px; }
+</style><script>
+// iOS/iPadOS: all browsers use WebKit and Web Bluetooth is not supported.
+// The iPadOS desktop user-agent can identify itself as a Mac.
+window.TrenoLegoBLEUnsupportedIOS = /iPad|iPhone|iPod/i.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+</script></head><body><div id="ios-unsupported" role="alert" aria-live="assertive" hidden>
+  <div class="ios-box"><h2 id="ios-unsupported-title"></h2><p id="ios-unsupported-text"></p></div>
+</div><script>
+if (window.TrenoLegoBLEUnsupportedIOS) {
+  const it = (navigator.language || '').toLowerCase().split('-')[0] === 'it';
+  document.getElementById('ios-unsupported-title').textContent =
+    it ? 'TrenoLegoBLE non disponibile su iOS' : 'TrenoLegoBLE is unavailable on iOS';
+  document.getElementById('ios-unsupported-text').textContent = it
+    ? 'I browser per iPhone e iPad non supportano Web Bluetooth, necessario per controllare gli hub LEGO Powered Up. Utilizza Chrome o Edge su Windows, oppure Chrome su Android.'
+    : 'Browsers on iPhone and iPad do not support Web Bluetooth, which is required to control LEGO Powered Up hubs. Use Chrome or Edge on Windows, or Chrome on Android.';
+  document.getElementById('ios-unsupported').hidden = false;
+  document.title = 'TrenoLegoBLE — ' + (it ? 'non supportato' : 'unsupported');
+}
+</script><main><header class="top"><div><h1>🚆 TrenoLegoBLE <span class="app-version">1.1.12</span></h1><div class="muted" data-i18n="subtitle">Controller Bluetooth multi-treno</div></div><nav class="tabs" aria-label="Pages"><button id="tab-controls" class="active" aria-current="page" data-i18n="controls">Controlli</button><button id="tab-settings" data-i18n="settings">Impostazioni</button></nav></header><div id="message" class="toast-stack" role="status" aria-live="polite" aria-atomic="false"></div><section id="reconnect-panel" class="reconnect-panel" hidden aria-live="polite"><div class="reconnect-progress" id="reconnect-progress"></div><div class="reconnect-details" id="reconnect-details"></div><div class="controls"><button id="reconnect-next" type="button"></button><button id="reconnect-close" type="button"></button></div></section><section class="page" id="page-controls"><div class="page-heading"><div class="global-actions"><button id="restore" data-i18n="reconnectAll">Riconnetti tutti</button><button id="stopall" class="danger" data-i18n="stopAll">STOP TUTTI</button></div></div><div id="trains"></div></section><section class="page" id="page-settings" hidden><div class="page-heading"><button id="add" class="primary" data-i18n="pair">+ Accoppia hub</button></div><section class="card global-energy"><strong data-i18n="energySaving">Risparmio energetico</strong><div class="energy-fields"><label class="check"><input id="energy-enabled" type="checkbox"> <span data-i18n="energyEnable">Disconnetti hub inattivi</span></label><label class="field"><span data-i18n="energyMinutes">Minuti di inattività</span><input id="energy-minutes" class="energy-minutes" type="number" min="1" max="240" step="1" inputmode="numeric" value="5"></label></div></section><div id="settings-trains"></div><section class="card"><div class="head"><strong data-i18n="duoGroups">Treni Duo</strong></div><div class="duo-setup"><label class="field"><span data-i18n="duoName">Nome Duo</span><input id="duo-name" class="trainname" maxlength="48" value="Treno Duo"></label><label class="field"><span data-i18n="firstHub">Primo hub</span><select id="duo-first"></select></label><label class="field"><span data-i18n="secondHub">Secondo hub</span><select id="duo-second"></select></label><button id="duo-add" data-i18n="createDuo">Crea Duo</button></div><div id="duo-settings"></div></section></section></main>
+<script type="module">
+if (!window.TrenoLegoBLEUnsupportedIOS) {
+
+const LANG=(navigator.language||'en').toLowerCase().split('-')[0]==='it'?'it':'en';
+const I18N={
+ it:{subtitle:'Controller Bluetooth multi-treno',controls:'Controlli',settings:'Impostazioni',reconnectAll:'Riconnetti tutti',stopAll:'STOP TUTTI',pair:'+ Accoppia hub',disclaimer:'La luminosità delle luci si configura in Impostazioni. Le luci Powered Up devono essere collegate a una porta diversa dal motore. La regolazione imposta la potenza, non la velocità misurata. In caso di perdita Bluetooth, sospensione della pagina o chiusura del browser, l’arresto non è garantito. Sorvegliare i treni.',connected:'Connesso',disconnected:'Disconnesso',battery:'Batteria',waiting:'in attesa…',target:'Obiettivo',lightsOn:'Luci ON',lightsOff:'Luci OFF',reconnect:'Riconnetti',name:'Nome del treno',motorPort:'Porta motore',lightPort:'Porta luci',none:'Nessuna',brightness:'Luminosità luci',acceleration:'Accelerazione',ramp:'Rampa attiva',reverse:'Inverti senso di marcia',disconnect:'Disconnetti',delete:'Elimina treno',motorPower:'Potenza motore',noTrains:'Nessun treno configurato. Vai in Impostazioni per accoppiare un hub.',noHubs:'Nessun hub associato. Premi Accoppia hub per iniziare.',train:'Treno',readError:'Impossibile leggere i treni salvati',saveError:'Impossibile salvare i treni in localStorage',openSecure:'Apri la pagina da localhost o HTTPS.',hubDisconnected:'Hub disconnesso',lightsError:'comando luci fallito',portConflict:'La porta motore e la porta luci devono essere diverse.',lightConflict:'La porta luci deve essere diversa dalla porta motore.',lost:'disconnesso. Arresto NON garantito: verificare il treno.',connectedNotice:'connesso.',connectionFailed:'Connessione non riuscita',reconnectionFailed:'Riconnessione non riuscita',bluetoothUnavailable:'Web Bluetooth non disponibile.',bluetoothSecure:'Web Bluetooth non disponibile: usare Chrome/Edge su HTTPS o localhost.',wrongHub:'Hub selezionato diverso',usePair:'Usa + Accoppia hub per associarlo.',alreadyConnected:'Questo hub è già connesso.',manual:'Riconnessione manuale: premi Riconnetti sul treno desiderato.',noSaved:'Nessun hub salvato trovato tra i dispositivi autorizzati. Usa Riconnetti su ogni scheda.',autoUnavailable:'Riconnessione automatica non disponibile: usa Riconnetti su ciascun treno.',manualSingle:'Riconnessione automatica non disponibile: usa Riconnetti sulla scheda del singolo treno.'},
+ en:{subtitle:'Multi-train Bluetooth controller',controls:'Controls',settings:'Settings',reconnectAll:'Reconnect all',stopAll:'STOP ALL',pair:'+ Pair hub',disclaimer:'Configure light brightness in Settings. Powered Up lights must use a different port from the motor. The slider controls power, not measured speed. Stopping is not guaranteed if Bluetooth disconnects, the page is suspended or the browser closes. Always supervise the trains.',connected:'Connected',disconnected:'Disconnected',battery:'Battery',waiting:'waiting…',target:'Target',lightsOn:'Lights ON',lightsOff:'Lights OFF',reconnect:'Reconnect',name:'Train name',motorPort:'Motor port',lightPort:'Lights port',none:'None',brightness:'Light brightness',acceleration:'Acceleration',ramp:'Enable ramp',reverse:'Reverse direction',disconnect:'Disconnect',delete:'Remove train',motorPower:'Motor power',noTrains:'No trains configured. Go to Settings to pair a hub.',noHubs:'No hubs paired. Select Pair hub to begin.',train:'Train',readError:'Cannot read saved trains',saveError:'Cannot save trains to localStorage',openSecure:'Open this page from localhost or HTTPS.',hubDisconnected:'Hub disconnected',lightsError:'light command failed',portConflict:'Motor and lights must use different ports.',lightConflict:'Lights and motor must use different ports.',lost:'disconnected. STOP is NOT guaranteed: check the train.',connectedNotice:'connected.',connectionFailed:'Connection failed',reconnectionFailed:'Reconnection failed',bluetoothUnavailable:'Web Bluetooth is unavailable.',bluetoothSecure:'Web Bluetooth unavailable: use Chrome/Edge over HTTPS or localhost.',wrongHub:'Selected hub does not match',usePair:'Use + Pair hub to associate it.',alreadyConnected:'This hub is already connected.',manual:'Manual reconnection: select Reconnect on the train.',noSaved:'No saved hubs found among authorized devices. Use Reconnect on each card.',autoUnavailable:'Automatic reconnection unavailable: use Reconnect on each train.',manualSingle:'Automatic reconnection unavailable: use Reconnect on an individual train.'}
+};
+Object.assign(I18N.it,{duoGroups:'Treni Duo',duoName:'Nome Duo',firstHub:'Primo hub',secondHub:'Secondo hub',createDuo:'Crea Duo',duoHelp:'Ogni hub può appartenere a un solo Duo. Le impostazioni dei singoli hub restano disponibili qui.',removeDuo:'Sciogli Duo',duoMissing:'Seleziona due hub differenti e disponibili.',duoReady:'Pronto',duoOffline:'Hub disconnesso',duoStopped:'Duo arrestato: un hub si è disconnesso. Verificare entrambi i treni.',duoConnectFirst:'Connettere entrambi gli hub per muovere il Duo.',duoLabel:'Duo',duoLights:'Luci Duo'});
+Object.assign(I18N.en,{duoGroups:'Duo trains',duoName:'Duo name',firstHub:'First hub',secondHub:'Second hub',createDuo:'Create Duo',duoHelp:'Each hub can belong to only one Duo. Individual hub settings remain available here.',removeDuo:'Ungroup Duo',duoMissing:'Select two different available hubs.',duoReady:'Ready',duoOffline:'Hub disconnected',duoStopped:'Duo stopped: one hub disconnected. Check both trains.',duoConnectFirst:'Connect both hubs before moving the Duo.',duoLabel:'Duo',duoLights:'Duo lights'});
+Object.assign(I18N.it,{reconnectProgress:'Hub connessi',reconnectSelect:'Seleziona prossimo hub',reconnectDone:'Tutti gli hub sono connessi.',reconnectRemaining:'Da connettere',reconnectCancel:'Chiudi',reconnectStart:'Seleziona un hub nella finestra Bluetooth. Ripeti per gli hub rimanenti.',reconnectCancelled:'Selezione annullata. Puoi riprendere quando vuoi.',reconnectUnknown:'Hub non registrato: seleziona uno dei treni salvati.',reconnectBusy:'Connessione in corso…'});
+Object.assign(I18N.en,{reconnectProgress:'Connected hubs',reconnectSelect:'Select next hub',reconnectDone:'All hubs are connected.',reconnectRemaining:'Still to connect',reconnectCancel:'Close',reconnectStart:'Select a hub in the Bluetooth dialog. Repeat for remaining hubs.',reconnectCancelled:'Selection cancelled. You can resume at any time.',reconnectUnknown:'Hub not registered: select one of the saved trains.',reconnectBusy:'Connecting…'});
+Object.assign(I18N.it,{bluetoothName:'Nome Bluetooth hub',bluetoothNameHelp:'Massimo 14 caratteri ASCII. La modifica viene inviata all’hub soltanto premendo Imposta.',bluetoothRead:'Leggi nome',bluetoothSet:'Imposta',bluetoothReset:'Ripristina LEGO',bluetoothUnknown:'Non letto',bluetoothInvalid:'Il nome Bluetooth deve contenere da 1 a 14 caratteri ASCII.',bluetoothOffline:'Connettere l’hub per leggere o modificare il nome Bluetooth.',bluetoothSent:'Nome Bluetooth inviato',bluetoothResetSent:'Richiesto il ripristino del nome LEGO',bluetoothReadSent:'Richiesta lettura del nome inviata',bluetoothError:'Operazione sul nome Bluetooth non riuscita',bluetoothConfirmReset:'Ripristinare il nome Bluetooth predefinito LEGO?',bluetoothCurrent:'Nome attuale'});
+Object.assign(I18N.en,{bluetoothName:'Hub Bluetooth name',bluetoothNameHelp:'Maximum 14 ASCII characters. The name is sent to the hub only when you press Set.',bluetoothRead:'Read name',bluetoothSet:'Set',bluetoothReset:'Reset LEGO name',bluetoothUnknown:'Not read',bluetoothInvalid:'Bluetooth name must be 1 to 14 ASCII characters.',bluetoothOffline:'Connect the hub to read or change its Bluetooth name.',bluetoothSent:'Bluetooth name command sent',bluetoothResetSent:'LEGO default name reset requested',bluetoothReadSent:'Name read request sent',bluetoothError:'Bluetooth name operation failed',bluetoothConfirmReset:'Restore the default LEGO Bluetooth name?',bluetoothCurrent:'Current name'});
+Object.assign(I18N.it,{rssi:'Segnale',hubInfo:'Informazioni hub',firmwareVersion:'Firmware',hardwareVersion:'Hardware',radioFirmwareVersion:'Firmware radio',protocolVersion:'Protocollo LEGO',batteryType:'Tipo batteria',batteryNormal:'Normale',batteryRechargeable:'Ricaricabile',hubUnknown:'Non disponibile'});
+Object.assign(I18N.en,{rssi:'Signal',hubInfo:'Hub information',firmwareVersion:'Firmware',hardwareVersion:'Hardware',radioFirmwareVersion:'Radio firmware',protocolVersion:'LEGO protocol',batteryType:'Battery type',batteryNormal:'Normal',batteryRechargeable:'Rechargeable',hubUnknown:'Unavailable'});
+Object.assign(I18N.it,{confirmDelete:'Eliminare il treno \"{name}\"? Questa operazione cancellerà le impostazioni salvate e scioglierà l’eventuale Duo.'});
+Object.assign(I18N.en,{confirmDelete:'Remove train \"{name}\"? This deletes its saved settings and ungroups any Duo.'});
+Object.assign(I18N.it,{energySaving:'Risparmio energetico',energyEnable:'Disconnetti hub inattivi',energyMinutes:'Minuti di inattività',energyHelp:'Impostazione globale. Ogni treno viene disconnesso dopo il periodo di inattività; i due hub di un Duo vengono disconnessi insieme, solo a motori fermi.',energyDisconnected:'disconnesso per inattività.'});
+Object.assign(I18N.en,{energySaving:'Power saving',energyEnable:'Disconnect inactive hubs',energyMinutes:'Inactivity (minutes)',energyHelp:'Global setting. Each train disconnects after inactivity; both hubs of a Duo disconnect together, only when motors are stopped.',energyDisconnected:'disconnected due to inactivity.'});
+Object.assign(I18N.it,{portA:'Porta A',portB:'Porta B',deviceType:'Dispositivo collegato',motor:'Motore',lights:'Luci',nothing:'Nulla',linkMotors:'Unisci i controlli dei motori A e B',portMotor:'Motore porta',noMotor:'Nessun motore configurato',twoMotors:'Motori A + B',lightPortLabel:'Luci porta'});
+Object.assign(I18N.en,{portA:'Port A',portB:'Port B',deviceType:'Connected device',motor:'Motor',lights:'Lights',nothing:'None',linkMotors:'Link motor controls A and B',portMotor:'Motor port',noMotor:'No motor configured',twoMotors:'Motors A + B',lightPortLabel:'Lights port'});
+Object.assign(I18N.it,{reorderTrain:'Trascina per riordinare i treni. Usa anche le frecce su e giù.',reorderSaved:'Ordine dei treni salvato.'});
+Object.assign(I18N.it,{ledTitle:'LED dell’hub',ledCustom:'Usa colore LEGO predefinito',ledColor:'Colore LED',ledNative:'Se disattivato, TrenoLegoBLE non controlla il LED. Il ritorno allo stato originale potrebbe richiedere il riavvio dell’hub.',ledApplied:'Colore LED applicato',ledError:'Impossibile impostare il LED',ledColors:['Spento','Rosa','Viola','Blu','Azzurro','Ciano','Verde','Giallo','Arancione','Rosso','Bianco']});
+Object.assign(I18N.en,{ledTitle:'Hub LED',ledCustom:'Use predefined LEGO color',ledColor:'LED color',ledNative:'When disabled, TrenoLegoBLE does not control the LED. Original indications may return only after restarting the hub.',ledApplied:'LED color applied',ledError:'Unable to set LED color',ledColors:['Off','Pink','Purple','Blue','Light blue','Cyan','Green','Yellow','Orange','Red','White']});
+Object.assign(I18N.en,{reorderTrain:'Drag to reorder trains. You can also use the up and down arrow keys.',reorderSaved:'Train order saved.'});
+const tr=key=>I18N[LANG][key];
+document.documentElement.lang=LANG;
+for(const el of document.querySelectorAll('[data-i18n]'))el.textContent=tr(el.dataset.i18n);
+const SERVICE='00001623-1212-efde-1623-785feabcd123';
+const CHARACTERISTIC='00001624-1212-efde-1623-785feabcd123';
+const trains=new Map();let nextId=1;const duos=new Map();const DUO_STORAGE='trenolegoble_duos';
+const STORAGE_KEY='trenolegoble_trains';
+// Global setting with independent inactivity clocks for each train / Duo.
+const ENERGY_STORAGE='trenolegoble_energy';
+function validEnergyMinutes(value){const n=Number(value);return Number.isInteger(n)&&n>=1&&n<=240?n:5;}
+function loadEnergySettings(){
+  try{const x=JSON.parse(localStorage.getItem(ENERGY_STORAGE)||'{}');return {enabled:x.enabled===true,minutes:validEnergyMinutes(x.minutes)};}
+  catch{return {enabled:false,minutes:5};}
+}
+const energy=loadEnergySettings();
+const MOTOR='motor', LIGHTS='lights', NONE='none';
+function makePorts(entry={}){
+  if(Array.isArray(entry.ports)&&entry.ports.length===2){
+    return entry.ports.map(p=>({type:[MOTOR,LIGHTS,NONE].includes(p?.type)?p.type:NONE,reverse:p?.reverse===true,brightness:Number.isFinite(p?.brightness)?Math.max(0,Math.min(100,p.brightness)):100,target:0,actual:0,lightOn:false}));
+  }
+  // 1.0.x migration: keep the original motor, lights and direction settings.
+  const motor=entry.port===1?1:0;
+  const light=(entry.lightPort===0||entry.lightPort===1)&&entry.lightPort!==motor?entry.lightPort:-1;
+  return [0,1].map(i=>({type:i===motor?MOTOR:i===light?LIGHTS:NONE,reverse:i===motor&&entry.reverse===true,brightness:Number.isFinite(entry.lightBrightness)?Math.max(0,Math.min(100,entry.lightBrightness)):100,target:0,actual:0,lightOn:false}));
+}
+function isMotor(p){return p.type===MOTOR;}
+function motorIndexes(t){return [0,1].filter(i=>isMotor(t.ports[i]));}
+function lightIndexes(t){return [0,1].filter(i=>t.ports[i].type===LIGHTS);}
+function motorsIdle(t){return t.ports.every(p=>!isMotor(p)||(p.target===0&&p.actual===0));}
+function motorTargets(t,percent,selection=motorIndexes(t)){
+  for(const i of selection){const p=t.ports[i];p.target=percent;if(!t.ramp){p.actual=percent;void sendPort(t,i,percent);}}
+  interact(t);markMotion(t);update(t);
+}
+function allMotorsOff(t,immediate=true){
+  for(const i of motorIndexes(t)){const p=t.ports[i];p.target=0;if(immediate){p.actual=0;void sendPort(t,i,0);}}
+  interact(t);markMotion(t);update(t);
+}
+function updatePortControls(t){
+  const container=t.card.querySelector('.motor-controls');
+  container.replaceChildren();
+  const motors=motorIndexes(t), linked=motors.length===2&&t.motorsLinked;
+  const groups=linked?[motors]:motors.map(i=>[i]);
+  for(const group of groups){
+    const label=document.createElement('div');label.className='motor-label';label.textContent=`${tr('portMotor')} ${group[0]===0?'A':'B'}`;
+    const row=document.createElement('div');row.className='motor-row';
+    const slider=document.createElement('input');slider.type='range';slider.className='slider';slider.min='-100';slider.max='100';slider.step='1';slider.value=String(t.ports[group[0]].target);slider.dataset.port=String(group[0]);slider.setAttribute('aria-label',label.textContent);
+    const reading=document.createElement('span');reading.className='reading';reading.textContent='0%';
+    row.append(slider,reading);if(motors.length===2&&!linked)container.append(label);container.append(row);
+    slider.addEventListener('input',()=>motorTargets(t,Number(slider.value),group));
+  }
+  if(!groups.length){const msg=document.createElement('span');msg.className='muted';msg.textContent=tr('noMotor');container.append(msg);}
+  const lights=t.card.querySelector('.lights-controls');lights.replaceChildren();
+  lights.classList.toggle('two-lights',lightIndexes(t).length===2);
+  for(const i of lightIndexes(t)){
+    const button=document.createElement('button');button.type='button';button.className='light-toggle';button.dataset.port=String(i);
+    button.addEventListener('click',()=>{interact(t);void setPortLights(t,i,!t.ports[i].lightOn);});lights.append(button);
+  }
+  update(t);
+}
+
+function saveEnergySettings(){
+  try{localStorage.setItem(ENERGY_STORAGE,JSON.stringify(energy));}
+  catch(err){notice(`${tr('saveError')}: ${err.message}`);}
+}
+function resetIdleClocks(){
+  const now=Date.now();
+  for(const t of trains.values()){
+    t.lastInteraction=now;
+    t.zeroSince=motorsIdle(t)?now:null;
+  }
+}
+function interact(t){t.lastInteraction=Date.now();}
+function markMotion(t){if(!motorsIdle(t))t.zeroSince=null;else if(t.zeroSince===null)t.zeroSince=Date.now();}
+let energyCheckBusy=false;
+async function checkEnergySaving(){
+  if(!energy.enabled||energyCheckBusy)return;
+  energyCheckBusy=true;
+  try{
+    const now=Date.now();
+    const groups=[...duos.values()].map(d=>d.members.map(id=>trains.get(id)).filter(Boolean));
+    for(const t of trains.values())if(!duoOf(t))groups.push([t]);
+    for(const members of groups){
+      const connected=members.filter(t=>t.device?.gatt?.connected);
+      if(!connected.length||members.some(t=>t.connecting||t.idleDisconnect))continue;
+      // A group is idle only if every motor is stopped and every ramp has completed.
+      if(members.some(t=>!motorsIdle(t))){
+        for(const t of members)if(!motorsIdle(t))t.zeroSince=null;
+        continue;
+      }
+      for(const t of members)if(t.zeroSince===null)t.zeroSince=now;
+      const idleFrom=Math.max(...members.map(t=>Math.max(t.lastInteraction,t.zeroSince)));
+      if(now-idleFrom<energy.minutes*60000)continue;
+      for(const t of connected)t.idleDisconnect=true;
+      try{
+        for(const t of connected)if(lightIndexes(t).length)await allLights(t,false);
+        await Promise.allSettled(connected.map(t=>t.pending));
+        // Check conditions again in case the user interacted during an async write.
+        if(!energy.enabled||members.some(t=>!motorsIdle(t))||
+           Date.now()-Math.max(...members.map(t=>Math.max(t.lastInteraction,t.zeroSince??Date.now())))<energy.minutes*60000)continue;
+        // Mark all members intentional before disconnecting any Duo member.
+        for(const t of connected)t.intentionalIdleDisconnect=true;
+        for(const t of connected){
+          if(t.device?.gatt?.connected){t.device.gatt.disconnect();notice(`${t.name} ${tr('energyDisconnected')}`);}
+        }
+      }finally{for(const t of connected)t.idleDisconnect=false;}
+    }
+  }finally{energyCheckBusy=false;}
+}
+
+function readSaved(){
+  try {
+    const data=JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    return Array.isArray(data)
+      ? data.filter(x=>x && typeof x.id==='string' && typeof x.name==='string').slice(0,25)
+      : [];
+  }catch(err){
+    notice(`${tr('readError')}: ${err.message}`);
+    return [];
+  }
+}
+let saved=readSaved();
+function saveStorage(){
+  try {
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(saved));
+  }catch(err){
+    notice(`${tr('saveError')}: ${err.message}. ${tr('openSecure')}`);
+  }
+}
+function readDuos(){try{const x=JSON.parse(localStorage.getItem(DUO_STORAGE)||'[]');return Array.isArray(x)?x.filter(d=>d&&typeof d.id==='string'&&Array.isArray(d.members)&&d.members.length===2):[];}catch{return [];}}
+function saveDuos(){try{localStorage.setItem(DUO_STORAGE,JSON.stringify([...duos.values()].map(d=>({id:d.id,name:d.name,members:d.members}))));}catch(e){notice(`${tr('saveError')}: ${e.message}`);}}
+function duoOf(t){return [...duos.values()].find(d=>d.members.includes(t.key));}
+function duoReady(d){return d.members.every(id=>{const t=trains.get(id);return t?.device?.gatt?.connected&&!t.connecting&&motorIndexes(t).length>0;});}
+function duoHalt(d,alert=false){
+ d.target=0;d.actual=0;d.lightOn=false;
+ for(const id of d.members){const t=trains.get(id);if(t)allMotorsOff(t,true);}
+ if(d.card)d.card.querySelector('.slider').value='0';updateDuo(d);
+ if(alert)notice(`${d.name}: ${tr('duoStopped')}`);
+}
+function updateDuos(){for(const d of duos.values())updateDuo(d);}
+function refreshDuoOptions(){const free=[...trains.values()].filter(t=>!duoOf(t));for(const id of ['duo-first','duo-second']){const sel=$(id),old=sel.value;sel.replaceChildren();for(const t of free){const opt=document.createElement('option');opt.value=t.key;opt.textContent=t.name;sel.append(opt);}if(free.some(t=>t.key===old))sel.value=old;}const a=$('duo-first'),b=$('duo-second');if(a.options.length>1&&a.value===b.value)b.selectedIndex=1;$('duo-add').disabled=free.length<2;}
+// Stable order keys distinguish hub entries from virtual Duo entries.
+const ORDER_STORAGE='trenolegoble_control_order';
+function readControlOrder(){
+ try{const list=JSON.parse(localStorage.getItem(ORDER_STORAGE)||'[]');return Array.isArray(list)?list.filter(x=>typeof x==='string'):[];}
+ catch{return [];}
+}
+let controlOrder=readControlOrder();
+function displayedCards(){return [...$('trains').children].filter(el=>el.classList.contains('card')&&!el.hidden&&el.dataset.orderKey);}
+function applyControlOrder(){
+ const container=$('trains');
+ const cards=displayedCards();
+ // Unlisted cards follow the saved ones; hidden Duo members are not moved.
+ cards.sort((a,b)=>{
+  const ai=controlOrder.indexOf(a.dataset.orderKey),bi=controlOrder.indexOf(b.dataset.orderKey);
+  return (ai<0?Number.MAX_SAFE_INTEGER:ai)-(bi<0?Number.MAX_SAFE_INTEGER:bi);
+ });
+ for(const card of cards)container.append(card);
+}
+function saveControlOrder(){
+ const visible=displayedCards().map(card=>card.dataset.orderKey);
+ // Preserve hidden train IDs for when a Duo is dissolved.
+ controlOrder=[...visible,...controlOrder.filter(key=>!visible.includes(key))];
+ try{localStorage.setItem(ORDER_STORAGE,JSON.stringify(controlOrder));}
+ catch(err){console.warn('Cannot save train order:',err);}
+}
+function createReorderHandle(card,key){
+ card.dataset.orderKey=key;
+ const head=card.querySelector('.head');
+ const handle=document.createElement('button');
+ handle.type='button';handle.className='reorder-handle';handle.textContent='⠿';
+ handle.title=tr('reorderTrain');handle.setAttribute('aria-label',tr('reorderTrain'));
+ head.append(handle);
+ let drag=null;
+ const clearMarkers=()=>{for(const el of displayedCards())el.classList.remove('drag-drop-before','drag-drop-after');};
+ const finish=()=>{
+  if(!drag)return;
+  card.classList.remove('drag-reordering');clearMarkers();
+  if(drag.moved){
+   if(drag.before&&drag.before.isConnected)$('trains').insertBefore(card,drag.before);
+   else if(drag.after&&drag.after.isConnected)drag.after.after(card);
+   saveControlOrder();
+  }
+  drag=null;
+ };
+ handle.addEventListener('pointerdown',e=>{
+  if(e.button!==0||card.hidden)return;
+  drag={id:e.pointerId,startX:e.clientX,startY:e.clientY,moved:false};
+  handle.setPointerCapture(e.pointerId);
+ });
+ handle.addEventListener('pointermove',e=>{
+  if(!drag||e.pointerId!==drag.id)return;
+  if(!drag.moved&&Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)<6)return;
+  drag.moved=true;card.classList.add('drag-reordering');
+  const other=displayedCards().filter(el=>el!==card);
+  let placed=false;
+  clearMarkers();
+  for(const candidate of other){
+   const rect=candidate.getBoundingClientRect();
+   if(e.clientY<rect.top+rect.height/2){
+    drag.before=candidate;drag.after=null;
+    candidate.classList.add('drag-drop-before');placed=true;break;
+   }
+  }
+  if(!placed){
+   const last=other[other.length-1];
+   if(last){drag.after=last;drag.before=null;last.classList.add('drag-drop-after');}
+  }
+  if(e.clientY<42)window.scrollBy(0,-12);
+  else if(e.clientY>window.innerHeight-42)window.scrollBy(0,12);
+ });
+ handle.addEventListener('pointerup',e=>{if(drag&&e.pointerId===drag.id)finish();});
+ handle.addEventListener('pointercancel',finish);
+ handle.addEventListener('lostpointercapture',finish);
+ handle.addEventListener('keydown',e=>{
+  if(e.key!=='ArrowUp'&&e.key!=='ArrowDown')return;
+  const cards=displayedCards(),index=cards.indexOf(card);
+  const destination=cards[index+(e.key==='ArrowUp'?-1:1)];
+  if(!destination)return;
+  e.preventDefault();
+  if(e.key==='ArrowUp')destination.before(card);else destination.after(card);
+  saveControlOrder();handle.focus();
+ });
+ return handle;
+}
+function refreshDuoVisibility(){for(const t of trains.values())t.card.hidden=!!duoOf(t);refreshDuoOptions();updateDuos();applyControlOrder();updateStopAllButton();}
+function createDuo(data,persist=true){if(duos.has(data.id)||data.members.length!==2||data.members[0]===data.members[1]||data.members.some(id=>!trains.has(id)||duoOf(trains.get(id))))return false;
+ const d={id:data.id,name:data.name||tr('duoLabel'),members:[...data.members],target:0,actual:0,lightOn:false,card:null,settingsCard:null};duos.set(d.id,d);
+ const card=document.createElement('section');card.className='card';card.innerHTML=`<div class="head"><div class="connected-title"><span class="status"></span><strong class="train-title"></strong></div><div class="duo-summary telemetry-line"><span class="battery"></span><span class="rssi"></span></div></div><div class="duo-hubs"></div><div class="motor-row"><input class="slider" type="range" min="-100" max="100" step="1" value="0" aria-label="${tr('motorPower')}"><span class="reading">0%</span></div><div class="train-actions"><button class="reconnect">${tr('reconnect')}</button><button class="light-toggle">${tr('lightsOn')}</button><button class="danger stop">STOP</button></div>`;
+ const settings=document.createElement('div');settings.className='card';settings.innerHTML=`<div class="head"><strong class="train-title"></strong></div><div class="controls"><label class="field">${tr('duoName')}<input class="trainname" maxlength="48"></label><button class="danger remove-duo">${tr('removeDuo')}</button></div><div class="duo-note"></div>`;
+ d.card=card;d.settingsCard=settings;createReorderHandle(card,'duo:'+d.id);card.querySelector('.train-title').textContent=d.name;settings.querySelector('.train-title').textContent=d.name;settings.querySelector('.trainname').value=d.name;
+ settings.querySelector('.trainname').addEventListener('change',e=>{d.name=e.target.value.trim()||tr('duoLabel');e.target.value=d.name;card.querySelector('.train-title').textContent=d.name;settings.querySelector('.train-title').textContent=d.name;saveDuos();});
+ settings.querySelector('.remove-duo').addEventListener('click',()=>{duoHalt(d);duos.delete(d.id);card.remove();settings.remove();saveDuos();refreshDuoVisibility();renderEmpty();});
+ card.querySelector('.slider').addEventListener('input',e=>{if(!duoReady(d)){duoHalt(d);notice(tr('duoConnectFirst'));return;}d.target=Number(e.target.value);for(const id of d.members)interact(trains.get(id));applyDuoTarget(d);updateDuo(d);});
+ card.querySelector('.stop').addEventListener('click',()=>{for(const id of d.members)interact(trains.get(id));d.target=0;d.card.querySelector('.slider').value='0';applyDuoTarget(d);updateDuo(d);});
+ card.querySelector('.reconnect').addEventListener('click',()=>{const missing=d.members.map(id=>trains.get(id)).filter(t=>!t.device?.gatt?.connected);if(missing.length)void reconnect(missing[0]);});
+ card.querySelector('.light-toggle').addEventListener('click',async()=>{if(!duoReady(d))return;for(const id of d.members)interact(trains.get(id));d.lightOn=!d.lightOn;await Promise.allSettled(d.members.map(id=>{const t=trains.get(id);return allLights(t,d.lightOn);}));updateDuo(d);});
+ $('trains').append(card);$('duo-settings').append(settings);if(persist)saveDuos();refreshDuoVisibility();renderEmpty();return true;
+}
+function applyDuoTarget(d){
+ if(!duoReady(d)){duoHalt(d,true);return;}
+ for(const id of d.members){const t=trains.get(id);motorTargets(t,d.target);}
+}
+function updateDuo(d){
+ if(!d.card)return;
+ const ready=duoReady(d);
+ d.card.querySelector('.status').replaceChildren(statusDot(ready));
+ d.card.querySelector('.slider').disabled=!ready;
+ d.card.querySelector('.reconnect').disabled=ready;
+ d.card.querySelector('.stop').disabled=!d.members.some(id=>!!trains.get(id)?.device?.gatt?.connected);
+ d.card.querySelector('.reading').textContent=`${d.target>0?'+':''}${d.target}%`;
+ const members=d.members.map(id=>trains.get(id));
+ const allConnected=members.every(t=>!!t?.device?.gatt?.connected);
+ const batteryKnown=allConnected&&members.every(t=>Number.isFinite(t.battery));
+ const signalKnown=allConnected&&members.every(t=>Number.isFinite(t.rssi));
+ const averageBattery=batteryKnown?Math.round(members.reduce((sum,t)=>sum+t.battery,0)/members.length):null;
+ const weakestSignal=signalKnown?Math.min(...members.map(t=>t.rssi)):null;
+ const summary=d.card.querySelector('.duo-summary');
+ const summaryBattery=summary.querySelector('.battery');
+ const summaryRssi=summary.querySelector('.rssi');
+ summaryBattery.textContent=`🔋 ${averageBattery===null?'—':averageBattery+'%'}`;
+ summaryBattery.classList.toggle('low',averageBattery!==null&&averageBattery<=20);
+ summaryRssi.textContent=`📡 ${weakestSignal===null?'—':weakestSignal+' dBm'}`;
+ summaryRssi.classList.toggle('weak',weakestSignal!==null&&weakestSignal<=-85);
+ const hubs=d.card.querySelector('.duo-hubs');
+ hubs.replaceChildren();
+ for(const t of members){
+  const div=document.createElement('div');div.className='duo-hub';
+  const strong=document.createElement('strong');strong.textContent=t.name;
+  const status=document.createElement('span');status.className='status';status.append(statusDot(!!t.device?.gatt?.connected));
+  const battery=document.createElement('span');battery.className='battery';battery.textContent=`🔋 ${t.device?.gatt?.connected&&t.battery!==null?t.battery+'%':'—'}`;
+  battery.classList.toggle('low',t.battery!==null&&t.battery<=20);
+  const rssi=document.createElement('span');rssi.className='rssi';rssi.textContent=`📡 ${t.device?.gatt?.connected&&t.rssi!==null?t.rssi+' dBm':'—'}`;
+  rssi.classList.toggle('weak',t.rssi!==null&&t.rssi<=-85);
+  const memberTitle=document.createElement('div');memberTitle.className='duo-member-title';memberTitle.append(status,strong);
+  const memberTelemetry=document.createElement('div');memberTelemetry.className='duo-member-telemetry';memberTelemetry.append(battery,rssi);
+  div.append(memberTitle,memberTelemetry);hubs.append(div);
+ }
+ d.card.querySelector('.light-toggle').hidden=!members.some(t=>lightIndexes(t).length>0);
+ d.card.querySelector('.light-toggle').disabled=!ready;
+ d.card.querySelector('.light-toggle').textContent=d.lightOn?tr('lightsOff'):tr('lightsOn');
+ d.settingsCard.querySelector('.duo-note').textContent=members.map(t=>t.name).join(' + ');
+}
+function saveTrain(t){
+ const record={id:t.key,name:t.name,ports:t.ports.map(p=>({type:p.type,reverse:p.reverse,brightness:p.brightness})),motorsLinked:t.motorsLinked,ramp:t.ramp,bluetoothName:t.bluetoothName,ledMode:t.ledMode,ledIndex:t.ledIndex};
+ saved=saved.filter(x=>x.id!==record.id);saved.push(record);saveStorage();
+}
+const $=id=>document.getElementById(id);
+const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+function notice(msg){
+  console.log('[TrenoLegoBLE]',msg);
+  const stack=$('message');
+  const toast=document.createElement('div');
+  toast.className='toast visible';
+  toast.textContent=msg;
+  stack.append(toast);
+  setTimeout(()=>{
+    toast.classList.remove('visible');
+    toast.classList.add('leaving');
+    setTimeout(()=>toast.remove(),700);
+  },4200);
+}
+function command(port,power){return Uint8Array.of(8,0,0x81,port,0x11,0x51,0, power & 255);}
+function queueWrite(t,bytes){
+  t.pending=t.pending.catch(()=>{}).then(async()=>{
+    if(!t.device.gatt.connected)throw Error(tr('hubDisconnected'));
+    if(t.char.writeValueWithoutResponse)await t.char.writeValueWithoutResponse(bytes);
+    else await t.char.writeValue(bytes);
+  });
+  return t.pending;
+}
+// LEGO Powered Up internal LED port 0x32: preset color mode (0).
+// Previous RGB configuration keys are deliberately ignored, with no migration.
+const LED_SWATCHES=['#343434','#ff69b4','#a020f0','#0066ff','#66bfff','#00ffff','#00cc00','#ffdd00','#ff8800','#ff2020','#ffffff'];
+function normalizeLedIndex(value){const n=Number(value);return Number.isInteger(n)&&n>=0&&n<=10?n:3;}
+async function applyHubLed(t,notify=false){
+ if(t.ledMode!=='preset'||!t.device?.gatt?.connected||!t.char)return;
+ try{
+  // Select indexed color mode 0, then send the index through WriteDirectModeData.
+  await queueWrite(t,Uint8Array.of(10,0,0x41,0x32,0x00,1,0,0,0,0));
+  await queueWrite(t,Uint8Array.of(8,0,0x81,0x32,0x11,0x51,0x00,normalizeLedIndex(t.ledIndex)));
+  if(notify)notice(`${t.name}: ${tr('ledApplied')}`);
+ }catch(err){console.warn('Hub LED:',err);if(notify)notice(`${t.name}: ${tr('ledError')}: ${err.message}`);}
+}
+// LEGO Version Number Encoding: 4 bytes, little endian and BCD.
+function decodeBCD(byte){return (byte>>4)*10+(byte&15);}
+function decodeVersion(view){
+  if(view.byteLength<9)return null;
+  const b0=view.getUint8(5),b1=view.getUint8(6),b2=view.getUint8(7),b3=view.getUint8(8);
+  const digits=[b0>>4,b0&15,b1>>4,b1&15,b2>>4,b2&15,b3&15];
+  if(digits.some(d=>d>9))return null;
+  const major=(b3>>4)&7, minor=b3&15;
+  return `${major}.${minor}.${decodeBCD(b2)}.${decodeBCD(b1)*100+decodeBCD(b0)}`;
+}
+function infoText(t,key){
+  const val=t.hubInfo?.[key];
+  if(key==='batteryType'&&val!==null&&val!==undefined)return val===0?tr('batteryNormal'):val===1?tr('batteryRechargeable'):tr('hubUnknown');
+  return val??'—';
+}
+function updateHubInfo(t){
+  if(!t.settingsCard)return;
+  for(const key of ['firmwareVersion','hardwareVersion','radioFirmwareVersion','protocolVersion','batteryType']){
+    const el=t.settingsCard.querySelector(`[data-hub-info="${key}"]`);
+    if(el)el.textContent=t.device?.gatt?.connected?infoText(t,key):'—';
+  }
+}
+function updateStopAllButton(){
+ const anyConnected=[...trains.values()].some(t=>!!t.device?.gatt?.connected);
+ $('stopall').disabled=!anyConnected;
+}
+function statusDot(connected){
+ const dot=document.createElement('span');
+ dot.className='connection-dot '+(connected?'is-connected':'is-disconnected');
+ dot.setAttribute('role','img');
+ dot.setAttribute('aria-label',connected?tr('connected'):tr('disconnected'));
+ dot.title=connected?tr('connected'):tr('disconnected');
+ return dot;
+}
+function updateRSSI(t){
+  const el=t.card?.querySelector('.rssi');
+  if(el){el.textContent=`📡 ${t.device?.gatt?.connected&&t.rssi!==null?t.rssi+' dBm':'—'}`;el.classList.toggle('weak',t.rssi!==null&&t.rssi<=-85);}
+}
+function update(t){
+ if(!t.card||!t.settingsCard)return;
+ const connected=!!t.device?.gatt?.connected;
+ t.card.querySelector('.status').replaceChildren(statusDot(connected));
+ t.settingsCard.querySelector('.status').textContent=connected?tr('connected'):tr('disconnected');
+ for(const battery of [t.card,t.settingsCard].map(el=>el.querySelector('.battery'))){
+  battery.textContent=battery.closest('.card')===t.card?(connected?`🔋 ${t.battery===null?tr('waiting'):t.battery+'%'}`:'🔋 —'):(connected?(t.battery===null?`${tr('battery')}: ${tr('waiting')}`:`${tr('battery')}: ${t.battery}%`):`${tr('battery')}: —`);
+  battery.classList.toggle('low',t.battery!==null&&t.battery<=20);
+ }
+ for(const row of t.card.querySelectorAll('.motor-row')){
+   const slider=row.querySelector('.slider'),i=Number(slider.dataset.port),p=t.ports[i];
+   slider.disabled=!connected;
+   if(document.activeElement!==slider)slider.value=String(p.target);
+   const actual=p.actual;row.querySelector('.reading').textContent=`${actual>0?'+':''}${actual}%`;
+ }
+ for(const button of t.card.querySelectorAll('.light-toggle')){
+   const p=t.ports[Number(button.dataset.port)];button.disabled=!connected;
+   button.textContent=`${tr('lightPortLabel')} ${button.dataset.port==='0'?'A':'B'}: ${p.lightOn?tr('lightsOff'):tr('lightsOn')}`;
+ }
+ t.card.querySelector('.reconnect').disabled=connected||!!t.connecting;
+ t.card.querySelector('.stop').disabled=!connected;
+ t.settingsCard.querySelectorAll('.bluetooth-read,.bluetooth-set,.bluetooth-reset').forEach(b=>b.disabled=!connected);
+ t.settingsCard.querySelector('.disconnect').disabled=!connected;
+ updateRSSI(t);updateHubInfo(t);updateDuos();updateStopAllButton();
+}
+async function sendPort(t,i,power){
+ if(!t.device?.gatt?.connected||!isMotor(t.ports[i]))return;
+ const value=t.ports[i].reverse?-power:power;
+ try{await queueWrite(t,command(i,value));}catch(err){notice(`${t.name}: ${err.message}`);}
+}
+function halt(t){allMotorsOff(t,true);}
+async function setPortLights(t,i,enabled){
+ const p=t.ports[i];if(p.type!==LIGHTS)return;
+ p.lightOn=enabled;update(t);
+ if(t.device?.gatt?.connected){
+  try{await queueWrite(t,command(i,enabled?p.brightness:0));}
+  catch(err){notice(`${t.name}: ${tr('lightsError')}: ${err.message}`);}
+ }
+}
+async function allLights(t,enabled){
+ for(const i of lightIndexes(t))await setPortLights(t,i,enabled);
+}
+
+function bluetoothNameDisplay(t){
+  const el=t.settingsCard?.querySelector('.bluetooth-current');
+  if(el)el.textContent=t.bluetoothName??tr('bluetoothUnknown');
+  const input=t.settingsCard?.querySelector('.bluetooth-name');
+  if(input && !input.dataset.edited && document.activeElement!==input)
+    input.value=t.bluetoothName??t.device?.name??'';
+}
+async function readBluetoothName(t){
+  if(!t.device?.gatt?.connected){notice(tr('bluetoothOffline'));return;}
+  try{
+    await queueWrite(t,Uint8Array.of(5,0,1,1,5));
+  }catch(e){notice(`${t.name}: ${tr('bluetoothError')}: ${e.message}`);}
+}
+async function setBluetoothName(t){
+  const name=t.settingsCard.querySelector('.bluetooth-name').value.trim();
+  if(!/^[\x20-\x7E]{1,14}$/.test(name)){notice(tr('bluetoothInvalid'));return;}
+  if(!t.device?.gatt?.connected){notice(tr('bluetoothOffline'));return;}
+  const bytes=new TextEncoder().encode(name);
+  try{
+    await queueWrite(t,Uint8Array.of(5+bytes.length,0,1,1,1,...bytes));
+    notice(`${t.name}: ${tr('bluetoothSent')}: ${name}`);
+    const input=t.settingsCard.querySelector('.bluetooth-name');
+    delete input.dataset.edited;
+    await readBluetoothName(t);
+  }catch(e){notice(`${t.name}: ${tr('bluetoothError')}: ${e.message}`);}
+}
+async function resetBluetoothName(t){
+  if(!t.device?.gatt?.connected){notice(tr('bluetoothOffline'));return;}
+  if(!confirm(tr('bluetoothConfirmReset')))return;
+  try{
+    await queueWrite(t,Uint8Array.of(5,0,1,1,4));
+    notice(`${t.name}: ${tr('bluetoothResetSent')}`);
+    const input=t.settingsCard.querySelector('.bluetooth-name');
+    delete input.dataset.edited;
+    await readBluetoothName(t);
+  }catch(e){notice(`${t.name}: ${tr('bluetoothError')}: ${e.message}`);}
+}
+function createCard(t){
+ const card=document.createElement('section');card.className='card';
+ card.innerHTML=`<div class="head"><div class="connected-title"><span class="status"></span><span class="train-title"></span></div><div class="telemetry-line"><span class="battery"></span><span class="rssi"></span></div></div><div class="motor-controls"></div><div class="train-actions"><button class="reconnect">${tr('reconnect')}</button><button class="danger stop">STOP</button><div class="lights-controls"></div></div>`;
+ const settings=document.createElement('section');settings.className='card';
+ settings.innerHTML=`<div class="head"><span class="train-title"></span><span class="status"></span><span class="battery"></span></div><div class="setting-grid"><label class="field">${tr('name')}<input class="trainname" type="text" maxlength="48"></label><label class="field">${tr('acceleration')}<label class="check"><input class="ramp" type="checkbox"> ${tr('ramp')}</label></label></div><div class="port-settings"></div><label class="check"><input class="motors-linked" type="checkbox"> ${tr('linkMotors')}</label><div class="bluetooth-name-setting"><label class="field">${tr('bluetoothName')}<input class="trainname bluetooth-name" type="text" maxlength="14" autocomplete="off" spellcheck="false"></label><small class="muted">${tr('bluetoothCurrent')}: <strong class="bluetooth-current">${tr('bluetoothUnknown')}</strong></small><div class="controls"><button type="button" class="bluetooth-read">${tr('bluetoothRead')}</button><button type="button" class="bluetooth-set">${tr('bluetoothSet')}</button><button type="button" class="bluetooth-reset">${tr('bluetoothReset')}</button></div><small class="muted">${tr('bluetoothNameHelp')}</small></div><div class="hub-led-setting"><strong>${tr('ledTitle')}</strong><label class="check"><input class="hub-led-enabled" type="checkbox"> ${tr('ledCustom')}</label><div class="hub-led-color"><label for="" class="muted">${tr('ledColor')}</label><select class="hub-led-picker" aria-label="${tr('ledColor')}">${tr('ledColors').map((name,i)=>`<option value="${i}">${name}</option>`).join('')}</select><span class="hub-led-preview" aria-hidden="true"></span></div><small class="muted">${tr('ledNative')}</small></div><div class="hub-information"><strong>${tr('hubInfo')}</strong><div class="hub-info-grid">${[['firmwareVersion','firmwareVersion'],['hardwareVersion','hardwareVersion'],['radioFirmwareVersion','radioFirmwareVersion'],['protocolVersion','protocolVersion'],['batteryType','batteryType']].map(([label,key])=>`<div class="hub-info-field"><span class="muted">${tr(label)}</span><strong data-hub-info="${key}">—</strong></div>`).join('')}</div></div><div class="controls"><button class="disconnect">${tr('disconnect')}</button><button class="forget danger">${tr('delete')}</button></div>`;
+ t.card=card;t.settingsCard=settings;createReorderHandle(card,'hub:'+t.key);
+ const ledCheck=settings.querySelector('.hub-led-enabled');
+ const ledPicker=settings.querySelector('.hub-led-picker');
+ const ledRow=settings.querySelector('.hub-led-color');
+ const ledPreview=settings.querySelector('.hub-led-preview');
+ ledCheck.checked=t.ledMode==='preset';
+ ledPicker.value=String(normalizeLedIndex(t.ledIndex));
+ ledRow.hidden=!ledCheck.checked;
+ const refreshLedPreview=()=>{ledPreview.style.backgroundColor=LED_SWATCHES[normalizeLedIndex(ledPicker.value)];};
+ refreshLedPreview();
+ ledCheck.addEventListener('change',()=>{
+  t.ledMode=ledCheck.checked?'preset':'native';
+  ledRow.hidden=t.ledMode!=='preset';
+  saveTrain(t);
+  // No LED commands in native mode; firmware may need restart to take over.
+  if(t.ledMode==='preset')void applyHubLed(t,true);
+ });
+ ledPicker.addEventListener('change',()=>{
+  t.ledIndex=normalizeLedIndex(ledPicker.value);
+  refreshLedPreview();
+  saveTrain(t);
+  if(t.ledMode==='preset')void applyHubLed(t,true);
+ });
+ for(let i=0;i<2;i++){
+  const box=document.createElement('div');box.className='port-box';box.dataset.port=String(i);
+  box.innerHTML=`<strong>${i===0?tr('portA'):tr('portB')}</strong><label class="field">${tr('deviceType')}<select class="port-type"><option value="motor">${tr('motor')}</option><option value="lights">${tr('lights')}</option><option value="none">${tr('nothing')}</option></select></label><label class="check"><input type="checkbox" class="port-reverse"> ${tr('reverse')}</label><label class="field light-brightness">${tr('brightness')}<div class="port-light-brightness"><input type="range" min="0" max="100" step="5" class="light-slider"><span class="light-value"></span></div></label>`;
+  settings.querySelector('.port-settings').append(box);
+  const sel=box.querySelector('.port-type'),reverse=box.querySelector('.port-reverse'),brightness=box.querySelector('.light-slider');
+  sel.value=t.ports[i].type;reverse.checked=t.ports[i].reverse;brightness.value=String(t.ports[i].brightness);
+  const refresh=()=>{reverse.closest('.check').hidden=t.ports[i].type!==MOTOR;box.querySelector('.light-brightness').hidden=t.ports[i].type!==LIGHTS;box.querySelector('.light-value').textContent=`${t.ports[i].brightness}%`;};
+  sel.addEventListener('change',async()=>{
+   const p=t.ports[i];const old=p.type;
+   // Stop the previous device before changing its port assignment.
+   if(old===MOTOR){p.target=0;p.actual=0;if(t.device?.gatt?.connected)await queueWrite(t,command(i,0)).catch(console.warn);}
+   else if(old===LIGHTS&&p.lightOn){await setPortLights(t,i,false);}
+   p.type=sel.value;p.target=0;p.actual=0;p.lightOn=false;
+   if(motorIndexes(t).length!==2)t.motorsLinked=false;
+   if(duoOf(t))duoHalt(duoOf(t));
+   interact(t);markMotion(t);refresh();refreshLink();updatePortControls(t);saveTrain(t);
+  });
+  reverse.addEventListener('change',()=>{t.ports[i].reverse=reverse.checked;interact(t);saveTrain(t);if(isMotor(t.ports[i])&&t.device?.gatt?.connected)void sendPort(t,i,t.ports[i].actual);});
+  brightness.addEventListener('input',()=>{t.ports[i].brightness=Number(brightness.value);interact(t);refresh();saveTrain(t);if(t.ports[i].lightOn)void setPortLights(t,i,true);});
+  refresh();
+ }
+ const linked=settings.querySelector('.motors-linked');
+ function refreshLink(){linked.disabled=motorIndexes(t).length!==2;linked.checked=t.motorsLinked&&motorIndexes(t).length===2;}
+ linked.addEventListener('change',()=>{
+  // Stop both motors before changing control topology.
+  allMotorsOff(t,true);t.motorsLinked=linked.checked;saveTrain(t);updatePortControls(t);
+ });
+ refreshLink();
+ const btInput=settings.querySelector('.bluetooth-name');btInput.value=t.bluetoothName??t.device?.name??'';
+ btInput.addEventListener('input',()=>{btInput.dataset.edited='true';});bluetoothNameDisplay(t);
+ settings.querySelector('.bluetooth-read').addEventListener('click',()=>void readBluetoothName(t));
+ settings.querySelector('.bluetooth-set').addEventListener('click',()=>void setBluetoothName(t));
+ settings.querySelector('.bluetooth-reset').addEventListener('click',()=>void resetBluetoothName(t));
+ const title=()=>{card.querySelector('.train-title').textContent=t.name;settings.querySelector('.train-title').textContent=t.name;refreshDuoOptions();updateDuos();};title();
+ const name=settings.querySelector('.trainname');name.value=t.name;
+ name.addEventListener('change',()=>{t.name=name.value.trim()||t.device?.name||tr('train');name.value=t.name;title();saveTrain(t);});
+ const ramp=settings.querySelector('.ramp');ramp.checked=t.ramp;
+ ramp.addEventListener('change',()=>{t.ramp=ramp.checked;saveTrain(t);});
+ card.querySelector('.stop').addEventListener('click',()=>{motorTargets(t,0);});
+ card.querySelector('.reconnect').addEventListener('click',()=>void reconnect(t));
+ settings.querySelector('.disconnect').addEventListener('click',async()=>{await allLights(t,false);halt(t);await t.pending.catch(()=>{});t.device?.gatt?.disconnect();});
+ settings.querySelector('.forget').addEventListener('click',async()=>{
+  if(!window.confirm(tr('confirmDelete').replace('{name}',t.name)))return;
+  if(t.device?.gatt?.connected){await allLights(t,false);halt(t);await t.pending.catch(()=>{});t.device.gatt.disconnect();}
+  const group=duoOf(t);if(group){duoHalt(group);duos.delete(group.id);group.card.remove();group.settingsCard.remove();saveDuos();}
+  trains.delete(t.key);saved=saved.filter(x=>x.id!==t.key);saveStorage();card.remove();settings.remove();refreshDuoVisibility();renderEmpty();
+ });
+ $('trains').append(card);$('settings-trains').append(settings);updatePortControls(t);refreshDuoVisibility();renderEmpty();
+}
+function renderEmpty(){
+  for(const [id,container,msg] of [['trains',$('trains'),tr('noTrains')],['settings-trains',$('settings-trains'),tr('noHubs')]]){
+    let el=container.querySelector('.empty');
+    if(!trains.size&&!el){el=document.createElement('p');el.className='empty';el.textContent=msg;container.append(el);}
+    if(trains.size&&el)el.remove();
+  }
+}
+function showPage(page){
+  $('page-controls').hidden=page!=='controls';$('page-settings').hidden=page!=='settings';
+  for(const p of ['controls','settings']){$('tab-'+p).classList.toggle('active',p===page);if(p===page)$('tab-'+p).setAttribute('aria-current','page');else $('tab-'+p).removeAttribute('aria-current');}
+}
+const energyCheck=$('energy-enabled'),energyInput=$('energy-minutes');
+energyCheck.checked=energy.enabled;
+energyInput.value=String(energy.minutes);
+energyInput.disabled=!energy.enabled;
+energyCheck.addEventListener('change',()=>{
+  energy.enabled=energyCheck.checked;
+  energyInput.disabled=!energy.enabled;
+  resetIdleClocks();saveEnergySettings();
+});
+energyInput.addEventListener('change',()=>{
+  energy.minutes=validEnergyMinutes(energyInput.value);
+  energyInput.value=String(energy.minutes);
+  resetIdleClocks();saveEnergySettings();
+});
+$('tab-controls').addEventListener('click',()=>showPage('controls'));
+$('tab-settings').addEventListener('click',()=>showPage('settings'));
+function attachDevice(t,device){
+  if(t.device===device)return;
+  if(t.device&&t.disconnectListener)t.device.removeEventListener('gattserverdisconnected',t.disconnectListener);
+  t.device=device;
+  if(t.bluetoothName==null && device.name) t.bluetoothName=device.name;
+  bluetoothNameDisplay(t);
+  t.disconnectListener=()=>{
+    if(trains.get(t.key)!==t)return;
+    const group=duoOf(t);const idle=!!t.intentionalIdleDisconnect;t.intentionalIdleDisconnect=false;if(group)duoHalt(group,!idle);
+    for(const p of t.ports){p.target=0;p.actual=0;p.lightOn=false;}t.battery=null;t.rssi=null;t.hubInfo={};update(t);
+    if(!idle)notice(`${t.name} ${tr('lost')}`);
+  };
+  device.addEventListener('gattserverdisconnected',t.disconnectListener);
+}
+async function connectDevice(t,device){
+  if(t.connecting)return;
+  t.connecting=true;update(t);
+  try{
+    const server=await device.gatt.connect();
+    const service=await server.getPrimaryService(SERVICE);
+    t.char=await service.getCharacteristic(CHARACTERISTIC);
+    attachDevice(t,device);
+    t.battery=null;t.rssi=null;t.hubInfo={};
+    // LEGO Wireless Protocol: Hub Properties (0x01), Battery Voltage (0x06).
+    // Subscribe to property updates (operation 0x02), received as 0x06.
+    if(t.notificationChar&&t.batteryListener)
+      t.notificationChar.removeEventListener('characteristicvaluechanged',t.batteryListener);
+    t.notificationChar=t.char;
+    t.batteryListener=event=>{
+      const view=event.target.value;
+      if(view.byteLength>=5&&view.getUint8(2)===0x82&&view.getUint8(3)===0x32){
+        const feedback=view.getUint8(4);
+        console.debug('[TrenoLegoBLE] LED output feedback:',feedback.toString(16));
+        if(feedback&0x04)console.warn('[TrenoLegoBLE] LED command discarded by hub',t.name);
+        return;
+      }
+      if(view.byteLength<5||view.getUint8(2)!==0x01)return;
+      // Hub Properties: Advertising Name (0x01), Update (0x06)
+      if(view.getUint8(3)===0x01&&view.getUint8(4)===0x06){
+        const bytes=new Uint8Array(view.buffer,view.byteOffset+5,view.byteLength-5);
+        const name=new TextDecoder().decode(bytes).replace(/\0+$/,'');
+        t.bluetoothName=name;
+        bluetoothNameDisplay(t);
+        // Never change the user's train name or automatically write the hub name.
+        saveTrain(t);
+        return;
+      }
+      if(view.getUint8(4)!==0x06)return;
+      const property=view.getUint8(3);
+      if(property===0x03||property===0x04){
+        const version=decodeVersion(view);
+        if(version!==null)t.hubInfo[property===0x03?'firmwareVersion':'hardwareVersion']=version;
+      }else if(property===0x05&&view.byteLength>=6){
+        t.rssi=view.getInt8(5);
+      }else if(property===0x06&&view.byteLength>=6){
+        const value=view.getUint8(5);if(value<=100)t.battery=value;
+      }else if(property===0x07&&view.byteLength>=6){
+        t.hubInfo.batteryType=view.getUint8(5);
+      }else if(property===0x09&&view.byteLength>=6){
+        const data=new Uint8Array(view.buffer,view.byteOffset+5,view.byteLength-5);
+        t.hubInfo.radioFirmwareVersion=new TextDecoder().decode(data).replace(/\0+$/,'');
+      }else if(property===0x0A&&view.byteLength>=7){
+        const lo=view.getUint8(5),hi=view.getUint8(6);
+        if([lo>>4,lo&15,hi>>4,hi&15].every(d=>d<=9))
+          t.hubInfo.protocolVersion=`${decodeBCD(hi)}.${decodeBCD(lo)}`;
+      }
+      update(t);
+    };
+    try{
+      await t.char.startNotifications();
+      t.char.addEventListener('characteristicvaluechanged',t.batteryListener);
+      // Request current level (0x05) and subscribe to changes (0x02).
+      await queueWrite(t,Uint8Array.of(5,0,1,6,2));
+      await queueWrite(t,Uint8Array.of(5,0,1,6,5));
+      // RSSI property supports periodic updates and a current-value request.
+      // Version properties provide one-time responses (operation 0x05).
+      for(const [property,operation] of [[5,2],[5,5],[3,5],[4,5],[9,5],[10,5],[7,5]]){
+        try{await queueWrite(t,Uint8Array.of(5,0,1,property,operation));}
+        catch(err){console.warn('Hub property request failed:',property,err);}
+      }
+      await readBluetoothName(t);
+    }catch(batteryError){
+      console.warn('Lettura batteria non disponibile:',batteryError);
+    }
+    for(const p of t.ports){p.target=0;p.actual=0;p.lightOn=false;}t.lastInteraction=Date.now();t.zeroSince=t.lastInteraction;t.intentionalIdleDisconnect=false;
+    await applyHubLed(t);
+    update(t);notice(`${t.name} ${tr('connectedNotice')}`);
+  }catch(err){
+    if(device.gatt?.connected)device.gatt.disconnect();
+    notice(`${tr('connectionFailed')}: ${t.name} (${err.name}): ${err.message}`);
+    console.error('Errore GATT',t.name,err);
+  }finally{t.connecting=false;update(t);updateDuos();}
+}
+async function reconnect(t){
+  if(t.connecting||t.device?.gatt?.connected)return;
+  if(!navigator.bluetooth){notice(tr('bluetoothUnavailable'));return;}
+  // IMPORTANT: requestDevice must be the first asynchronous operation
+  // in the click handler's call chain (transient user activation).
+  try{
+    const device=await navigator.bluetooth.requestDevice({filters:[{services:[SERVICE]}]});
+    if(device.id!==t.key){
+      notice(`${tr('wrongHub')} ${t.name}. ${tr('usePair')}`);
+      return;
+    }
+    attachDevice(t,device);
+    await connectDevice(t,device);
+  }catch(err){
+    if(err.name!=='NotFoundError')notice(`${tr('reconnectionFailed')}: ${t.name} (${err.name}): ${err.message}`);
+  }
+}
+// A requestDevice() chooser selects only one device. Subsequent chooser calls need
+// a fresh user gesture, so Reconnect all offers a guided multi-step workflow.
+let reconnectFlow=false;
+let reconnectBusy=false;
+function missingTrains(){return [...trains.values()].filter(t=>!t.device?.gatt?.connected);}
+function renderReconnectFlow(info=''){
+  const panel=$('reconnect-panel');
+  if(!reconnectFlow){panel.hidden=true;return;}
+  panel.hidden=false;
+  const missing=missingTrains();
+  $('reconnect-progress').textContent=`${tr('reconnectProgress')}: ${trains.size-missing.length}/${trains.size}`;
+  $('reconnect-details').textContent=missing.length
+    ? `${tr('reconnectRemaining')}: ${missing.map(t=>t.name).join(', ')}${info?' — '+info:''}`
+    :tr('reconnectDone');
+  const next=$('reconnect-next');
+  next.hidden=!missing.length;
+  next.disabled=reconnectBusy;
+  next.textContent=reconnectBusy?tr('reconnectBusy'):tr('reconnectSelect');
+  $('reconnect-close').textContent=tr('reconnectCancel');
+}
+function startReconnectFlow(){
+  reconnectFlow=true;
+  renderReconnectFlow(tr('reconnectStart'));
+}
+async function selectNextReconnect(){
+  if(reconnectBusy||!missingTrains().length)return;
+  if(!navigator.bluetooth){notice(tr('bluetoothUnavailable'));return;}
+  reconnectBusy=true;
+  renderReconnectFlow();
+  try{
+    // Must be invoked before any other await, directly from button click.
+    const device=await navigator.bluetooth.requestDevice({filters:[{services:[SERVICE]}]});
+    const t=trains.get(device.id);
+    if(!t){renderReconnectFlow(tr('reconnectUnknown'));return;}
+    if(t.device?.gatt?.connected){renderReconnectFlow(tr('alreadyConnected'));return;}
+    attachDevice(t,device);
+    await connectDevice(t,device);
+    renderReconnectFlow();
+  }catch(err){
+    if(err.name==='NotFoundError')renderReconnectFlow(tr('reconnectCancelled'));
+    else {notice(`${tr('reconnectionFailed')} (${err.name}): ${err.message}`);renderReconnectFlow(err.message);}
+  }finally{reconnectBusy=false;renderReconnectFlow();}
+}
+$('reconnect-next').addEventListener('click',()=>void selectNextReconnect());
+$('reconnect-close').addEventListener('click',()=>{reconnectFlow=false;renderReconnectFlow();});
+
+function register(device){
+  let t=trains.get(device.id);
+  if(t){if(t.device?.gatt?.connected){notice(tr('alreadyConnected'));return null;}attachDevice(t,device);return t;}
+  const existing=saved.find(x=>x.id===device.id);
+  const id=nextId++;
+  t={key:device.id,name:existing?.name||device.name||`${tr('train')} ${id}`,device:null,char:null,ports:makePorts(existing),motorsLinked:existing?.motorsLinked===true,battery:null,rssi:null,hubInfo:{},notificationChar:null,batteryListener:null,ramp:existing?.ramp!==false,reverse:existing?.reverse===true,bluetoothName:existing?.bluetoothName??null,ledMode:existing?.ledMode==='preset'?'preset':'native',ledIndex:normalizeLedIndex(existing?.ledIndex),lastInteraction:Date.now(),zeroSince:Date.now(),idleDisconnect:false,pending:Promise.resolve(),card:null,settingsCard:null,connecting:false};
+  trains.set(t.key,t);attachDevice(t,device);createCard(t);saveTrain(t);return t;
+}
+async function addTrain(){
+  if(!navigator.bluetooth){notice(tr('bluetoothSecure'));return;}
+  try{
+    const device=await navigator.bluetooth.requestDevice({filters:[{services:[SERVICE]}]});
+    const t=register(device);if(t)await connectDevice(t,device);
+  }catch(err){if(err.name!=='NotFoundError')notice(`${tr('connectionFailed')}: ${err.message}`);}
+}
+for(const entry of saved){
+  const t={key:entry.id,name:entry.name,device:null,char:null,ports:makePorts(entry),motorsLinked:entry.motorsLinked===true,battery:null,rssi:null,hubInfo:{},notificationChar:null,batteryListener:null,ramp:entry.ramp!==false,reverse:entry.reverse===true,bluetoothName:entry.bluetoothName??null,ledMode:entry.ledMode==='preset'?'preset':'native',ledIndex:normalizeLedIndex(entry.ledIndex),lastInteraction:Date.now(),zeroSince:Date.now(),idleDisconnect:false,pending:Promise.resolve(),card:null,settingsCard:null,connecting:false};
+  trains.set(t.key,t);createCard(t);
+}
+async function restoreConnections(){
+  if(typeof navigator.bluetooth?.getDevices!=='function'){
+    // Modalita' manuale: le schede restano disponibili e ogni pulsante
+    // Riconnetti apre il selettore BLE tramite requestDevice().
+    notice(tr('manual'));
+    return;
+  }
+  try{
+    const devices=await navigator.bluetooth.getDevices();
+    console.log('[TrenoLegoBLE] Hub autorizzati:',devices.map(d=>({id:d.id,name:d.name})));
+    const pending=[];
+    for(const t of trains.values()){
+      if(t.device?.gatt?.connected)continue;
+      const device=devices.find(d=>d.id===t.key);
+      if(device){attachDevice(t,device);pending.push(connectDevice(t,device));}
+    }
+    if(!pending.length && trains.size)notice(tr('noSaved'));
+    await Promise.allSettled(pending);
+  }catch(err){
+    console.warn('Recupero hub autorizzati non riuscito:',err);
+    notice(tr('autoUnavailable'));
+  }
+}
+$('restore').addEventListener('click',startReconnectFlow);
+$('duo-add').addEventListener('click',()=>{const a=$('duo-first').value,b=$('duo-second').value;if(!a||!b||a===b){notice(tr('duoMissing'));return;}const name=$('duo-name').value.trim()||tr('duoLabel');if(!createDuo({id:'duo-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),name,members:[a,b]}))notice(tr('duoMissing'));});
+for(const data of readDuos())createDuo(data,false);
+refreshDuoVisibility();
+// Avvio: riconnessione automatica solo se getDevices e' disponibile.
+renderEmpty();
+updateStopAllButton();
+void restoreConnections();
+$('add').addEventListener('click',addTrain);
+$('stopall').addEventListener('click',()=>{
+ for(const d of duos.values()){d.target=0;d.actual=0;d.lightOn=false;if(d.card)d.card.querySelector('.slider').value='0';}
+ for(const t of trains.values())allMotorsOff(t,true);
+ updateDuos();
+});
+// Browsers may pause background timers when the phone is locked; check again on resume.
+setInterval(()=>void checkEnergySaving(),5000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)void checkEnergySaving();});
+// One ramp step per motor every 100 ms. Writes remain serialized per hub.
+setInterval(()=>{for(const t of trains.values()){
+ if(!t.device?.gatt?.connected||!t.ramp)continue;
+ let changed=false;
+ for(const i of motorIndexes(t)){
+  const p=t.ports[i];if(p.actual===p.target)continue;
+  const delta=p.target-p.actual;
+  p.actual+=Math.sign(delta)*Math.min(5,Math.abs(delta));
+  changed=true;void sendPort(t,i,p.actual);
+ }
+ if(changed){markMotion(t);update(t);}
+}},100);
+
+}
+</script><script>
+// PWA shell only: the Service Worker does not communicate with Bluetooth.
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js', {scope: './'})
+      .catch(err => console.warn('[TrenoLegoBLE] Service Worker:', err));
+  });
+}
+</script></body></html>
