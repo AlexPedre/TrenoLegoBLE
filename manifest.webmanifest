@@ -2,7 +2,7 @@
   "id": "./index.html",
   "name": "TrenoLegoBLE",
   "short_name": "TrenoLegoBLE",
-  "description": "Controllo Bluetooth multi-treno per hub LEGO Powered Up",
+  "description": "Bluetooth multi-train controller for LEGO Powered Up hubs",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
