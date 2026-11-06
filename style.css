@@ -1,0 +1,243 @@
+/*
+ * TrenoLegoBLE 1.1.17 — presentation and responsive layout.
+ * Styles are extracted from v1.1.16 without changing the original design.
+ */
+
+:root{font-family:Arial,Helvetica,sans-serif;color-scheme:light}*{box-sizing:border-box}body{margin:0;background:linear-gradient(to top, rgba(255,255,255,1) 50%, rgba(148,187,233,1) 100%) fixed;color:#17233b;padding:18px;min-height:100vh}main{max-width:980px;margin:auto}h1{margin:0;font-size:1.65rem}.muted{color:#46556d}.top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px}.tabs{display:flex;gap:6px;padding:5px;background:rgba(255,255,255,.45);border-radius:12px}.tabs button{border:0;background:transparent;color:#17233b}.tabs button.active{background:#2196F3;color:white}button,input,select{font:inherit}button{border:1px solid #607a9a;background:#2196F3;color:white;border-radius:9px;padding:10px 14px;cursor:pointer}button:hover:not(:disabled){filter:brightness(1.16)}button:disabled{opacity:.45;cursor:not-allowed}.primary{background:#2196F3}.danger{background:#FF0000;border-color:#FF0000}.card{background:rgba(255,255,255,.73);border:1px solid rgba(80,110,150,.35);border-radius:15px;padding:20px;margin:14px 0}.head,.controls{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.head{margin-bottom:14px}.controls{justify-content:flex-start}.slider{width:100%;accent-color:#2196F3;margin:15px 0 20px;height:24px}.reading{font-size:1.8rem;font-weight:700;font-variant-numeric:tabular-nums}.status{font-size:.87rem;color:#135d9e}.battery{font-size:.87rem;color:#46556d}.battery.low{color:#b06b00}.warn{color:#a45000;min-height:1.4em}.trainname,select{background:#fff;color:#17233b;border:1px solid #9aa9bd;border-radius:7px;padding:9px}.trainname{max-width:260px;width:100%}.setting-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:15px;margin:15px 0}.field{display:flex;flex-direction:column;gap:6px}.check{display:flex;align-items:center;gap:8px}.train-title{font-size:1.2rem;font-weight:650}.empty{border:1px dashed #7e96b7;border-radius:12px;padding:26px;text-align:center;color:#46556d}.lights-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:4px 0 14px}.lights-row .light-slider{width:min(240px,100%);accent-color:#2196F3}.lights-row .light-value{font-variant-numeric:tabular-nums}.page[hidden],[hidden]{display:none!important}.duo-hubs{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0}.duo-hub{flex:1;min-width:140px;background:rgba(219,235,251,.7);border-radius:9px;padding:10px}.duo-setup{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.duo-setup label{flex:1;min-width:150px}.duo-setup select,.duo-setup input{width:100%}.duo-note{font-size:.85rem;color:#46556d}.check input{width:18px;height:18px;accent-color:#2196F3}small{line-height:1.6}.pill{display:inline-flex;gap:8px;align-items:center}.page-heading{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}#message:empty{display:none}.reconnect-panel{margin:12px 0 18px;padding:16px;border:1px solid #7e96b7;border-radius:13px;background:rgba(255,255,255,.86)}.reconnect-panel .controls{margin-top:12px}.reconnect-progress{font-weight:600}.reconnect-details{font-size:.9rem;color:#46556d;margin-top:6px}@media(max-width:600px){body{padding:12px}.tabs{width:100%}.tabs button{flex:1}.card{padding:15px}.controls button{flex:1}}
+.bluetooth-name-setting{border-top:1px solid rgba(80,110,150,.3);padding-top:15px;margin:15px 0;display:flex;flex-direction:column;gap:9px}.bluetooth-name-setting .bluetooth-name{max-width:270px}.bluetooth-name-setting .controls button{padding:8px 11px}
+
+/* Toast: fade-in/fade-out inspired by TrenoLEGO fade animations */
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+@keyframes fadeout{from{opacity:1}to{opacity:0}}
+/* Stack begins at the vertical midpoint; subsequent notices sit below the first. */
+.toast-stack{position:fixed;z-index:1000;top:50%;left:50%;transform:translateX(-50%);width:min(90vw,540px);display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.toast{position:relative;width:100%;background:rgba(16,47,86,.96);color:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(16,38,70,.30);padding:13px 20px;text-align:center;pointer-events:none;opacity:0;line-height:1.4;overflow-wrap:anywhere}
+.toast.visible{animation:fadein .35s ease forwards}
+.toast.leaving{animation:fadeout .65s ease forwards}
+@media (prefers-reduced-motion:reduce){.toast.visible,.toast.leaving{animation-duration:.01ms}}
+.hub-information{border-top:1px solid rgba(80,110,150,.3);margin-top:15px;padding-top:13px}
+.hub-information + .controls{border-top:1px solid rgba(80,110,150,.38);margin-top:20px;padding-top:18px}
+.hub-info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:9px;margin-top:10px}
+.hub-info-field{display:flex;flex-direction:column;gap:3px;font-size:.91rem}
+.hub-info-field strong{font-variant-numeric:tabular-nums;font-weight:600}
+.rssi{font-size:.87rem;color:#46556d;white-space:nowrap}
+.rssi.weak{color:#a45000}
+
+/* Unsupported platform: full-screen, accessible notice. */
+#ios-unsupported{position:fixed;inset:0;z-index:99999;background:linear-gradient(to top,#fff 50%,#94bbe9 100%);display:flex;align-items:center;justify-content:center;padding:20px;color:#17233b}
+#ios-unsupported[hidden]{display:none!important}
+#ios-unsupported .ios-box{max-width:510px;background:rgba(255,255,255,.93);border:1px solid #9ab6d4;border-radius:18px;box-shadow:0 12px 40px rgba(22,51,89,.2);padding:30px;text-align:center}
+#ios-unsupported h2{margin:0 0 14px;font-size:1.5rem}
+#ios-unsupported p{margin:0;line-height:1.55}
+
+/* Motor slider styling adapted from TrenoLEGO's .motor and .motorvalue.
+   px/clamp dimensions keep it touch-friendly on both Windows and Android. */
+.motor-row{display:flex;align-items:center;gap:18px;margin:20px 0 22px;min-width:0}
+.motor-row .slider{-webkit-appearance:none;appearance:none;display:block;flex:1;min-width:0;width:100%;height:clamp(15px,2.8vw,25px);border:0;border-radius:30px;background:#d3d3d3;box-shadow:2px 3px 6px #55555570;margin:0;outline:none;opacity:.85;transition:background-color .5s ease,opacity .2s ease;cursor:pointer}
+.motor-row .slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:clamp(26px,4.5vw,42px);height:clamp(26px,4.5vw,42px);border:0;border-radius:50%;background:#2196F3;cursor:pointer;box-shadow:0 2px 5px #55555540}
+.motor-row .slider::-moz-range-thumb{width:clamp(26px,4.5vw,42px);height:clamp(26px,4.5vw,42px);border:0;border-radius:50%;background:#2196F3;cursor:pointer;box-shadow:0 2px 5px #55555540}
+.motor-row .slider:hover:not(:disabled){background:#a7a7a7;opacity:1}
+.motor-row .slider:disabled{cursor:not-allowed;opacity:.45}
+.motor-row .reading{color:navy;font-size:clamp(19px,2.5vw,26px);font-weight:600;min-width:86px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.train-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:10px}
+.train-actions .reconnect{order:0;margin-right:auto}
+.train-actions .light-toggle{order:1}
+.train-actions .stop{order:2;margin-left:auto}
+@media(max-width:600px){.train-actions button{flex:0 1 auto}.motor-row{gap:10px}.motor-row .reading{min-width:70px}}
+
+/* Uniform action buttons: global actions and individual trains/Duo. */
+#page-controls .page-heading{width:100%}
+.global-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%}
+.global-actions button{box-sizing:border-box;flex:0 0 auto;width:min(200px,calc((100% - 12px)/2));white-space:nowrap;text-align:center}
+.train-actions{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:12px;width:100%}
+.train-actions .reconnect{grid-column:1;grid-row:1;justify-self:start;order:unset;margin:0;width:min(200px,100%);white-space:nowrap}
+.train-actions .stop{grid-column:3;grid-row:1;justify-self:end;order:unset;margin:0;width:min(200px,100%);white-space:nowrap}
+.train-actions .light-toggle{grid-column:2;grid-row:1;justify-self:center;order:unset;margin:0}
+@media(max-width:600px){
+  .global-actions button{font-size:clamp(12px,3.5vw,15px);padding:10px 6px;flex:0 0 auto}
+  .train-actions{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+  .train-actions .reconnect{grid-column:1;grid-row:1;width:100%;min-width:0}
+  .train-actions .stop{grid-column:2;grid-row:1;width:100%;min-width:0}
+  .train-actions .light-toggle{grid-column:1 / -1;grid-row:2;justify-self:center}
+  .train-actions button{font-size:clamp(12px,3.5vw,15px);padding:10px 8px}
+}
+.app-version{display:inline-block;font-size:.43em;font-weight:400;color:#46556d;vertical-align:baseline;margin-left:.25em;white-space:nowrap}
+/* Two independent ports; dynamic motor and light controls. */
+.port-settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:16px 0}
+.port-settings .port-box{border:1px solid rgba(80,110,150,.35);border-radius:12px;padding:14px;background:rgba(219,235,251,.36)}
+.port-box .field{margin:9px 0}.port-box .check{margin:12px 0}
+.motor-controls .motor-label{font-weight:600;margin:12px 0 0}
+.motor-controls .motor-row{margin:0 0 10px}
+.motor-controls .motor-label:not(:first-child){margin-top:16px}
+.lights-controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.port-light-brightness{display:flex;align-items:center;gap:8px;margin-top:10px}
+.port-light-brightness input{flex:1;min-width:90px;accent-color:#2196F3}
+.energy-setting{padding:15px 0;border-top:1px solid rgba(80,110,150,.35);margin-top:14px}
+.energy-fields{display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin:12px 0}
+.energy-fields .field{max-width:170px}
+.energy-minutes{width:100%;max-width:130px;background:#fff;color:#17233b;border:1px solid #9aa9bd;border-radius:7px;padding:9px}
+.energy-setting small{display:block}
+
+/* Compact motor indication and aligned light buttons. */
+.motor-row{gap:8px}
+.motor-row .reading{min-width:69px}
+@media(max-width:600px){.motor-row{gap:6px}.motor-row .reading{min-width:61px}}
+.train-actions{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
+.train-actions .reconnect{grid-column:1;grid-row:1;justify-self:start;width:min(200px,100%)}
+.train-actions .stop{grid-column:2;grid-row:1;justify-self:end;width:min(200px,100%)}
+.train-actions > .light-toggle{grid-column:2;grid-row:2;justify-self:end;width:min(200px,100%)}
+.train-actions .lights-controls{grid-column:2;grid-row:2;display:flex;flex-direction:column;align-items:stretch;gap:10px;width:min(200px,100%);margin:0;justify-self:end}
+.train-actions .lights-controls .light-toggle{width:100%;margin:0;white-space:normal}
+@media(max-width:600px){
+ .train-actions > .light-toggle{grid-column:2;grid-row:2;justify-self:end;width:100%}
+ .train-actions .lights-controls{grid-column:2;grid-row:2;width:100%}
+}
+/* One light: right, directly below STOP. Two lights: left and right. */
+.train-actions .lights-controls.two-lights{
+  grid-column:1 / -1;
+  grid-row:2;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:12px;
+  width:100%;
+  justify-self:stretch;
+}
+.train-actions .lights-controls.two-lights .light-toggle{
+  width:min(200px,100%);
+  white-space:nowrap;
+}
+.train-actions .lights-controls.two-lights .light-toggle:first-child{justify-self:start}
+.train-actions .lights-controls.two-lights .light-toggle:last-child{justify-self:end}
+@media(max-width:600px){
+  .train-actions .lights-controls.two-lights{gap:10px}
+  .train-actions .lights-controls.two-lights .light-toggle{width:100%;font-size:clamp(12px,3.5vw,15px);padding:10px 6px}
+}
+
+.connection-dot{display:inline-block;width:1.05em;height:1.05em;min-width:1.05em;border-radius:50%;vertical-align:middle;border:1px solid rgba(0,0,0,.12)}
+.connection-dot.is-connected{background:#22a447}
+.connection-dot.is-disconnected{background:#e33434}
+#page-controls .status{display:inline-flex;align-items:center;justify-content:center;min-height:1.15em}
+
+/* v1.1.4: connection status precedes the train name; telemetry is compact. */
+#page-controls .connected-title,
+#page-controls .duo-member-title{display:flex;align-items:center;gap:9px;min-width:0}
+#page-controls .connected-title .train-title,
+#page-controls .duo-member-title strong{overflow-wrap:anywhere}
+#page-controls .connected-title .status,
+#page-controls .duo-member-title .status{flex:0 0 auto;line-height:1}
+#page-controls .telemetry-line{display:flex;align-items:center;gap:15px;flex-wrap:wrap}
+#page-controls .duo-member-telemetry{display:flex;align-items:center;gap:13px;flex-wrap:wrap;margin-top:9px}
+#page-controls .duo-member-telemetry .battery,
+#page-controls .duo-member-telemetry .rssi{white-space:nowrap}
+#page-controls .duo-hub{min-width:0;flex:1 1 190px}
+@media(max-width:600px){#page-controls .telemetry-line{gap:9px}}
+
+/* v1.1.4: compact Duo members and aggregated telemetry in header. */
+#page-controls .duo-summary{display:flex;align-items:center;gap:14px;flex-wrap:nowrap;white-space:nowrap}
+#page-controls .duo-hubs{display:flex;flex-direction:column;gap:7px;margin:8px 0 12px}
+#page-controls .duo-hub{display:flex;align-items:center;justify-content:space-between;gap:12px;flex:1 1 auto;width:100%;min-width:0;padding:9px 12px;flex-wrap:wrap}
+#page-controls .duo-member-title{flex:1 1 auto}
+#page-controls .duo-member-telemetry{display:flex;align-items:center;gap:14px;margin-top:0;flex:0 0 auto;flex-wrap:nowrap;white-space:nowrap}
+@media(max-width:520px){#page-controls .duo-summary{gap:8px;font-size:.84rem}#page-controls .duo-hub{gap:7px}#page-controls .duo-member-telemetry{gap:9px;font-size:.8rem}}
+
+/* v1.1.5: uniform navy train names and energy saving heading. */
+.train-title,
+#page-controls .duo-member-title strong,
+#page-settings .global-energy > strong[data-i18n="energySaving"] {
+  color: navy;
+}
+#page-settings .global-energy > strong[data-i18n="energySaving"] {
+  font-size: 1.2rem;
+  font-weight: 650;
+}
+
+/* v1.1.6 - accessible pointer/keyboard reorder handles (controls page only) */
+#trains .card .reorder-handle{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;padding:0;border:1px solid rgba(25,58,109,.24);border-radius:8px;background:rgba(255,255,255,.52);color:#000080;font-size:22px;line-height:1;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+#trains .card .reorder-handle:active{cursor:grabbing}
+#trains .card .reorder-handle:focus-visible{outline:3px solid #2196F3;outline-offset:2px}
+#trains .card .head{column-gap:9px}
+#trains .card.drag-reordering{opacity:.67;outline:2px dashed #2196F3;outline-offset:2px}
+#trains .card.drag-drop-before{box-shadow:0 -4px 0 #2196F3}
+#trains .card.drag-drop-after{box-shadow:0 4px 0 #2196F3}
+
+/* v1.1.7: reorder grip after telemetry, at the far right of each header. */
+#page-controls #trains .card > .head > .reorder-handle{order:3;margin-left:0;flex-shrink:0}
+#page-controls #trains .card > .head > .connected-title{order:1;margin-right:auto}
+#page-controls #trains .card > .head > .telemetry-line,
+#page-controls #trains .card > .head > .duo-summary{order:2;margin-left:0}
+
+/* v1.1.16: compact per-port boost controls. */
+.port-boost{margin-top:12px;padding:10px 12px;border:1px solid #aaa5;border-radius:8px}
+.port-boost>.check{margin:8px 0}.boost-options>.field{margin:8px 0}
+.boost-options[hidden],.port-boost[hidden]{display:none!important}
+/* v1.1.8: shadows consistent with the power slider (2px 3px 6px #55555570).
+   The two navigation buttons remain flat; their common container is raised. */
+:root{--tl-shadow:2px 3px 6px #55555570}
+button:not(#tab-controls):not(#tab-remotes):not(#tab-settings){box-shadow:var(--tl-shadow)}
+button:not(#tab-controls):not(#tab-remotes):not(#tab-settings):disabled{box-shadow:none}
+.tabs{box-shadow:var(--tl-shadow)}
+.tabs button{box-shadow:none}
+/* Covers Controls train/Duo cards, Settings hub/Duo cards and global energy card. */
+#page-controls .card,#page-remotes .card,#page-settings .card{box-shadow:var(--tl-shadow)}
+/* Preserve clear drop-position feedback without losing the card elevation. */
+#trains .card.drag-drop-before{box-shadow:0 -4px 0 #2196F3,var(--tl-shadow)}
+#trains .card.drag-drop-after{box-shadow:0 4px 0 #2196F3,var(--tl-shadow)}
+
+/* v1.1.13: hub LED color selection */
+.hub-led-setting{border-top:1px solid rgba(80,110,150,.35);margin-top:16px;padding-top:15px;display:flex;flex-direction:column;gap:12px}
+.hub-led-setting>strong{color:#000080;font-size:1.05rem}
+.hub-led-color{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.hub-led-color select{min-width:180px;max-width:260px}.hub-led-preview{width:26px;height:26px;flex-shrink:0;border:1px solid #8792a2;border-radius:50%}
+.hub-led-setting small{max-width:650px}
+/* v1.1.9: spacing between Duo controls and hub combination */
+#duo-settings .duo-note { margin-top: 12px; }
+
+/* 1.1.16: haptics and battery dialogs */
+.haptic-setting{margin:16px 0;padding:12px 16px;border:1px solid rgba(80,110,150,.35);border-radius:12px;background:rgba(255,255,255,.73)}
+.low-battery-overlay{position:fixed;inset:0;background:#101c32a8;display:flex;align-items:center;justify-content:center;padding:20px;z-index:1000}
+.low-battery-dialog{background:white;border-radius:15px;box-shadow:0 10px 40px #17233b77;max-width:420px;width:100%;padding:23px}
+.low-battery-dialog h2{font-size:1.15rem;margin:0 0 12px}
+.low-battery-dialog p{line-height:1.5;white-space:pre-line}
+.remote-telemetry{font-size:.88rem;color:#46556d;display:flex;gap:15px;flex-wrap:wrap}
+.remote-information{border-top:1px solid #bac9db;padding-top:12px}
+/* 1.1.13: remote page and compact SVG navigation */
+.tabs button{display:inline-flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap}
+.tabs button svg{width:19px;height:19px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+@media(max-width:540px){.tabs button{gap:4px;font-size:clamp(11px,3vw,14px);padding:9px 5px}.tabs button svg{width:17px;height:17px}}
+.remote-status-bar{font-size:.85rem;color:#46556d;margin-top:12px}
+.remote-layout{display:flex;flex-direction:column;gap:14px}
+.remote-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.remote-pair{border:1px solid #a3b7cc;background:rgba(219,235,251,.35);padding:13px;border-radius:11px;margin:10px 0}
+.remote-pair.active{border-color:#2196f3;box-shadow:0 0 0 1px #2196f344}
+.remote-label{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.remote-swatch{display:inline-block;width:18px;height:18px;border:1px solid #7f8b99;border-radius:50%;vertical-align:middle}
+.remote-pair .field{min-width:0;flex:1}
+.remote-pair select{width:100%;min-width:0}
+.remote-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.remote-actions button{padding:8px 11px}
+.remote-mode{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.remote-mode .field{flex:1;min-width:150px}
+.remote-pair .head{margin-bottom:9px}
+.remote-connected{color:#178039}.remote-offline{color:#b13b3b}
+@media(max-width:600px){.remote-grid{grid-template-columns:1fr}.remote-actions button{flex:0 0 auto}}
+
+
+/* Hub information: collapsible details placed beneath the hub heading. */
+#page-settings .hub-information {
+  border-top: 1px solid #bac9db;
+  border-bottom: 1px solid rgba(80,110,150,.18);
+  margin: 4px 0 16px;
+  padding: 12px 0;
+}
+#page-settings .hub-information summary {
+  cursor: pointer;
+  color: #135d9e;
+  font-weight: 600;
+  user-select: none;
+}
+#page-settings .hub-information .hub-info-grid {
+  padding-top: 12px;
+}
+#page-settings .hub-information + .setting-grid {
+  margin-top: 12px;
+}
